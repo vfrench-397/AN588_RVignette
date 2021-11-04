@@ -500,4 +500,6 @@ Then relate modules to GO terms to assess their possible biological function bey
 2. R in Action Chapter 16 
 3. Langfelder and Horvath 2008 
 - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2631488/
+4. Horvath and Zhang (2005) doi: 10.2202/1544-6115.1128
+https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html
 
