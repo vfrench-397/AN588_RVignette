@@ -20,7 +20,7 @@ All of these are important for identifying potential candidate genes associated 
 
 Before running through the following code you will need to install the following packages: {BiocManager}, {WGCNA}, {flashClust}
 
-BiocManager is a package that will facilitate the installation of the other two packages as they are not updated to the current version of R. 
+BiocManager is a package that will facilitate the installation of the other two packages as they are not updated to the current version of R. We have also found while runnin this module it is best to update your R and Rstudio to the most current version. 
 
 ```{r}
 #install.packages('BiocManager')
@@ -29,7 +29,7 @@ BiocManager is a package that will facilitate the installation of the other two 
 #BiocManager::install('flashClust')
 ```
 
-Note: Installing these packages will result in prompts that require you to input additional commands at the command line. For example if the prompt: 'install from source' appears, hit y then enter for yes. If the prompt 'install additional packages?' appears, hit a then enter for all.
+Note: Installing these packages will result in prompts that require you to input additional commands at the command line. For example if the prompt: 'install from source' appears, hit y then enter for yes. If the prompt 'install additional packages?' appears, hit a then enter for all. 
 
 ```{r}
 library(WGCNA)
