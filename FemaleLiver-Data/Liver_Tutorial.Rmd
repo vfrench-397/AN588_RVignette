@@ -400,13 +400,22 @@ main = "Sample dendrogram and trait heatmap")
 
 Identify modules that are significantly associated with external traits by correlating  the trait with eigengenes (summary or representative gene for each module) and look at the significance of the correlation.
 
+```{r}
+#Defining datExpr
+clust = cutreeStatic(sampleTree, cutHeight = 15, minSize = 10)
+table(clust)
+keepSamples = (clust==1)
+datExpr = datExpr0[keepSamples, ]
+nGenes = ncol(datExpr)
+nSamples = nrow(datExpr)
+```
 
 ```{r}
 # Define numbers of genes and samples
-nGenes = ncol(datTraits);
-nSamples = nrow(datTraits);
+nGenes = ncol(datExpr);
+nSamples = nrow(datExpr);
 # Recalculate Module Eigengenes with color labels
-MEs0 = moduleEigengenes(datTraits, mergedColors)$eigengenes
+MEs0 = moduleEigengenes(datExpr, mergedColors)$eigengenes
 MEs = orderMEs(MEs0)
 moduleTraitCor = cor(MEs, datTraits, use = "p")
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
