@@ -128,7 +128,6 @@ if (sum(!gsg$goodGenes)>0)
 printFlush(paste("Removing genes:", paste(names(expression.data)[!gsg$goodGenes], collapse = ", "))); #Identifies and prints outlier genes
 if (sum(!gsg$goodSamples)>0)
 printFlush(paste("Removing samples:", paste(rownames(expression.data)[!gsg$goodSamples], collapse = ", "))); #Identifies and prints oulier samples
-
 expression.data <- expression.data[gsg$goodSamples == TRUE, gsg$goodGenes == TRUE] # Removes the offending genes and samples from the data
 }
 ```
@@ -141,11 +140,9 @@ used several times within this pathway (link module).
 
 ```{r}
 sampleTree <- hclust(dist(expression.data), method = "average") #Clustering samples
-
 #Setting the graphical parameters
 par(cex = 0.6);
 par(mar = c(0,4,2,0))
-
 #Plotting the cluster dendrogram
 plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="", cex.lab = 1.5,
 cex.axis = 1.5, cex.main = 2)
@@ -162,17 +159,14 @@ and retain the rest of the samples.
 #Setting the graphical parameters
 par(cex = 0.6);
 par(mar = c(0,4,2,0))
-
 plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="", cex.lab = 1.5,
 cex.axis = 1.5, cex.main = 2)
-
 #draw on line to show cutoff height
 abline(h = 15, col = "red");
 ```
 
 ```{r}
 cut.sampleTree <- cutreeStatic(sampleTree, cutHeight = 15, minSize = 10) #returns numeric vector
-
 #Remove outlier
 expression.data <- expression.data[cut.sampleTree==1, ]
 ```
@@ -443,10 +437,8 @@ them!
 
 ```{r}
 METree = hclust(as.dist(ME.dissimilarity), method = "average") #Clustering eigengenes 
-
 par(mar = c(0,4,2,0)) #seting margin sizes
 par(cex = 0.6);#scaling the graphic
-
 plot(METree)
 abline(h=.25, col = "red") #a height of .25 corresponds to correlation of .75
 ```
@@ -458,10 +450,8 @@ the mergeCloseModules command
 
 ```{r}
 merge <- mergeCloseModules(expression.data, ModuleColors, cutHeight = .25)
-
 # The merged module colors, assigning one color to each module
 mergedColors = merge$colors
-
 # Eigengenes of the new merged modules
 mergedMEs = merge$newMEs
 ```
@@ -544,16 +534,31 @@ main = "Sample dendrogram and trait heatmap")
 
 ### Module-Trait associations
 
+<<<<<<< HEAD
 Identify modules that are significantly associated with external traits
 by correlating the trait with eigengenes (summary or representative gene
 for each module) and look at the significance of the correlation.
+=======
+### Module-Trait associations 
+
+Identify modules that are significantly associated with external traits by correlating  the trait with eigengenes (summary or representative gene for each module) and look at the significance of the correlation.
+
+```{r}
+#Defining datExpr
+clust = cutreeStatic(sampleTree, cutHeight = 15, minSize = 10)
+table(clust)
+keepSamples = (clust==1)
+datExpr = datExpr0[keepSamples, ]
+nGenes = ncol(datExpr)
+nSamples = nrow(datExpr)
+```
 
 ```{r}
 # Define numbers of genes and samples
-nGenes = ncol(datTraits);
-nSamples = nrow(datTraits);
+nGenes = ncol(datExpr);
+nSamples = nrow(datExpr);
 # Recalculate Module Eigengenes with color labels
-MEs0 = moduleEigengenes(datTraits, mergedColors)$eigengenes
+MEs0 = moduleEigengenes(datExpr, mergedColors)$eigengenes
 MEs = orderMEs(MEs0)
 moduleTraitCor = cor(MEs, datTraits, use = "p")
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
@@ -592,16 +597,29 @@ define a quantitativemeasure of module membership MM as the correlation
 of the module eigengene and the gene expression profile. Thisallows us
 to quantify the similarity of all genes on the array to every module.
 
+<<<<<<< HEAD
 Connectivity - how connected is that speficic node (how many nodes have
 high correlation with that node). High connectivity indicates a hub gene
 (central to many nodes). - high connectivity can be identified by a high
 topological overlap
+=======
+We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.
+>>>>>>> f4ec7b61f0fd5347a2fbcdf9d7e4a8c7f92aa050
 
 Whole Network connectivity - a measure for how well the node is
 connected throughout the entire system
 
+<<<<<<< HEAD
 Intramodular connectivity - a measure for how well that node belongs to
 its module. How well that node is connected within its module.
+=======
+  Connectivity - how connected is that specific node (how many nodes have high correlation with that node). High connectivity indicates a hub gene (central to many nodes). 
+  - high connectivity can be identified by a high topological overlap
+  
+  Whole Network connectivity - a measure for how well the node is connected throughout the entire system
+  
+  Intramodular connectivity - a measure for how well that node belongs to its module. How well that node is connected within its module. 
+>>>>>>> f4ec7b61f0fd5347a2fbcdf9d7e4a8c7f92aa050
 
 Gene significance - (the pairwise correlation between a sample trait and
 the eigengene, and the p-value for each module). Module eigengenes
@@ -613,23 +631,28 @@ weight = as.data.frame(datTraits$weight_g)
 names(weight) = "weight"
 # names (colors) of the modules
 modNames = substring(names(MEs), 3)
-geneModuleMembership = as.data.frame(cor(datExpr, MEs, use = "p"))
+geneModuleMembership = as.data.frame(cor(datTraits, MEs, use = "p"))
 MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples))
 names(geneModuleMembership) = paste("MM", modNames, sep="")
 names(MMPvalue) = paste("p.MM", modNames, sep="")
-geneTraitSignificance = as.data.frame(cor(datExpr, weight, use = "p"))
+geneTraitSignificance = as.data.frame(cor(datTraits, weight, use = "p"))
 GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples))
 names(geneTraitSignificance) = paste("GS.", names(weight), sep="")
 names(GSPvalue) = paste("p.GS.", names(weight), sep="")
+head(GSPvalue)
 ```
 
 Intramodular analysis: identifying genes with high GS and MM
 
+<<<<<<< HEAD
 Using the GS and MM measures, we can identify genes that have a high
 significance for weight as well as high modulemembership in interesting
 modules. As an example, we look at the brown module that has the highest
 association with weight. We plot a scatterplot of Gene Significance vs.
 Module Membership in the brown module:
+=======
+Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules. As an example, we look at the brown module that has the highest association with weight. We plot a scatter plot of Gene Significance vs. Module Membership in the brown module:
+>>>>>>> f4ec7b61f0fd5347a2fbcdf9d7e4a8c7f92aa050
 
 ```{r}
 module = "brown"
