@@ -23,10 +23,10 @@ Before running through the following code you will need to install the following
 BiocManager is a package that will facilitate the installation of the other two packages as they are not updated to the current version of R. We have also found while runnin this module it is best to update your R and Rstudio to the most current version. 
 
 ```{r}
-install.packages('BiocManager')
-library(BiocManager)
-BiocManager::install('WGCNA')
-BiocManager::install('flashClust')
+#install.packages('BiocManager')
+#library(BiocManager)
+#BiocManager::install('WGCNA')
+#aBiocManager::install('flashClust')
 ```
 
 Note: Installing these packages will result in prompts that require you to input additional commands at the command line. For example if the prompt: 'install from source' appears, hit y then enter for yes. If the prompt 'install additional packages?' appears, hit a then enter for all. 
@@ -403,10 +403,10 @@ Identify modules that are significantly associated with external traits by corre
 
 ```{r}
 # Define numbers of genes and samples
-nGenes = ncol(datTraits);
-nSamples = nrow(datTraits);
+nGenes = ncol(datExpr);
+nSamples = nrow(datExpr);
 # Recalculate Module Eigengenes with color labels
-MEs0 = moduleEigengenes(datTraits, mergedColors)$eigengenes
+MEs0 = moduleEigengenes(datExpr, mergedColors)$eigengenes
 MEs = orderMEs(MEs0)
 moduleTraitCor = cor(MEs, datTraits, use = "p")
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
@@ -417,7 +417,8 @@ moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
 textMatrix = paste(signif(moduleTraitCor, 2), "\n(",
 signif(moduleTraitPvalue, 1), ")", sep = "");
 dim(textMatrix) = dim(moduleTraitCor)
-par(mar = c(6, 8.5, 3, 3));
+par(cex = 0.6);
+par(mar = c(0,4,2,0));
 # Display the correlation values within a heatmap plot
 labeledHeatmap(Matrix = moduleTraitCor,
 xLabels = names(datTraits),
@@ -485,10 +486,6 @@ cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 Clearly, GS and MM are highly correlated,illustrating that genes highly significantly associated with a trait are often also the most important (central) elements of modules associated with the trait. The reader is encouraged to try this code with other significance trait/module correlation (for example, the magenta, midnightblue, and red modules with weight).
 
 We have found modules with high association with our trait of interest, and have identified their central players by the Module Membership measure
-  
-## GO Analysis? 
-
-Then relate modules to GO terms to assess their possible biological function beyond eigengene analysis
 
 
 ## Why use WGCNA: 
