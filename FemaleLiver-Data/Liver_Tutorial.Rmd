@@ -3,24 +3,37 @@ title: "Liver_Tutorial"
 author: "Victoria French"
 date: "11/1/2021"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 # Weighted Gene Correlation Network Analysis
 
-WGCNA is a variation of correlation network construction. Networks are visual representations of interactions between 'nodes' in a system. The nodes in Weighted Gene Correlation Network Analysis are individual genes. Therefore WGCNA is a great tool for visualizing patterns and relationships between gene expression profiles (transcripts). WGCNA can: 
+WGCNA is a variation of correlation network construction. Networks are
+visual representations of interactions between 'nodes' in a system. The
+nodes in Weighted Gene Correlation Network Analysis are individual
+genes. Therefore WGCNA is a great tool for visualizing patterns and
+relationships between gene expression profiles (transcripts). WGCNA can:
 
-1) Identify clusters of similarly expressed genes
-2) Identify highly connected 'hub' genes
-3) Relate clusters (modules) of genes to one another 
-4) Relate gene expression to external sample traits. 
+1)  Identify clusters of similarly expressed genes
+2)  Identify highly connected 'hub' genes
+3)  Relate clusters (modules) of genes to one another
+4)  Relate gene expression to external sample traits.
 
-All of these are important for identifying potential candidate genes associated with the sample traits as well as identifying genes that are consistently co-expressed and could be contributing to similar molecular pathways, all  while accounting for inter-individual variation in gene expression. 
+All of these are important for identifying potential candidate genes
+associated with the sample traits as well as identifying genes that are
+consistently co-expressed and could be contributing to similar molecular
+pathways, all while accounting for inter-individual variation in gene
+expression.
 
-## Setup 
+## Setup
 
-Before running through the following code you will need to install the following packages: {BiocManager}, {WGCNA}, {flashClust}
+Before running through the following code you will need to install the
+following packages: {BiocManager}, {WGCNA}, {flashClust}
 
-BiocManager is a package that will facilitate the installation of the other two packages as they are not updated to the current version of R. 
+BiocManager is a package that will facilitate the installation of the
+other two packages as they are not updated to the current version of R.
 
 ```{r}
 install.packages('BiocManager')
@@ -29,7 +42,10 @@ BiocManager::install('WGCNA')
 BiocManager::install('flashClust')
 ```
 
-Note: Installing these packages will result in prompts that require you to input additional commands at the command line. For example if the prompt: 'install from source' appears, hit y then enter for yes. If the prompt 'install additional packages?' appears, hit a then enter for all.
+Note: Installing these packages will result in prompts that require you
+to input additional commands at the command line. For example if the
+prompt: 'install from source' appears, hit y then enter for yes. If the
+prompt 'install additional packages?' appears, hit a then enter for all.
 
 ```{r}
 library(WGCNA)
@@ -37,13 +53,16 @@ library(flashClust)
 library(curl)
 ```
 
-## Data input 
+## Data input
 
-WGCNA utilizes gene expression data from micro array or RNA-seq experiments. (go into transcription)
+WGCNA utilizes gene expression data from micro array or RNA-seq
+experiments. (go into transcription)
 
-Link to video: https://www.youtube.com/watch?v=Hv5flUOsE0s
+Link to video: <https://www.youtube.com/watch?v=Hv5flUOsE0s>
 
-We are utilizing the data set available from the authors of the WGCNA pathway that they utilize in their tutorial (ref). But we will be reading in the data from our github page. 
+We are utilizing the data set available from the authors of the WGCNA
+pathway that they utilize in their tutorial (ref). But we will be
+reading in the data from our github page.
 
 ```{r}
 d <- curl('https://raw.githubusercontent.com/vfrench-397/AN588_RVignette/main/FemaleLiver-Data/LiverFemale3600.csv')
@@ -51,11 +70,21 @@ liver.data <- read.csv(file = d, stringsAsFactors = FALSE, header = TRUE)
 head(liver.data)
 ```
 
-As you can see, this .csv file has already quantified and normalized expression levels from raw sequence data. For more information on how to generate expression data, there is a great online course (manual) available from the sanger institute detailing the process: https://www.singlecellcourse.org/scrna-seq-analysis-with-bioconductor.html
+As you can see, this .csv file has already quantified and normalized
+expression levels from raw sequence data. For more information on how to
+generate expression data, there is a great online course (manual)
+available from the sanger institute detailing the process:
+<https://www.singlecellcourse.org/scrna-seq-analysis-with-bioconductor.html>
 
-For the purposes of this tutorial it is just important to understand the values in our data set are relative expression levels of the gene sequence in the test sample compared to the expression levels in a control sample. 
+For the purposes of this tutorial it is just important to understand the
+values in our data set are relative expression levels of the gene
+sequence in the test sample compared to the expression levels in a
+control sample.
 
-You can also see, when initially reading in the data set it is formatted so rows are genes and columns are samples. It also contains a lot of additional trait data that is not expression data. Therefore we need to reformat the data so it is conducive to the WGCNA package functions. 
+You can also see, when initially reading in the data set it is formatted
+so rows are genes and columns are samples. It also contains a lot of
+additional trait data that is not expression data. Therefore we need to
+reformat the data so it is conducive to the WGCNA package functions.
 
 ```{r}
 expression.data <- liver.data[,-c(1:8)] #removing variables not holding expression data
@@ -64,26 +93,33 @@ names(expression.data) <- liver.data$substanceBXH
 #renaming the columns so we don't lose the gene IDs
 ```
 
-
 ## Cleaning Data/ Identifying Outliers
 
-### Identifying outlying genes 
+### Identifying outlying genes
 
-The WGCNA package has a built in function to identifying outlier genes called goodSampleGenes(). The function checks the data and returns a list object of samples and genes that pass its filtering criteria. You can adjust how strict the filtering process is by changing the default of the arguments. 
+The WGCNA package has a built in function to identifying outlier genes
+called goodSampleGenes(). The function checks the data and returns a
+list object of samples and genes that pass its filtering criteria. You
+can adjust how strict the filtering process is by changing the default
+of the arguments.
 
 ```{r}
 gsg <-goodSamplesGenes(expression.data)
 View(gsg)
 ```
 
-By viewing the gsg list object you can see it contains 3 logical vectors (good genes, good samples and allOK). If we want to see if the function identified any possible outlier all we have to do is evaluate the allOK vector.
+By viewing the gsg list object you can see it contains 3 logical vectors
+(good genes, good samples and allOK). If we want to see if the function
+identified any possible outlier all we have to do is evaluate the allOK
+vector.
 
 ```{r}
 gsg$allOK
 ```
 
-
-If the allOK object returns true, which it does in this case, there are no outliers present. If it doesn't return true, we need to filter out the outliers manually. 
+If the allOK object returns true, which it does in this case, there are
+no outliers present. If it doesn't return true, we need to filter out
+the outliers manually.
 
 ```{r}
 if (!gsg$allOK)
@@ -97,9 +133,11 @@ expression.data <- expression.data[gsg$goodSamples == TRUE, gsg$goodGenes == TRU
 }
 ```
 
-### Identifying outlier samples 
+### Identifying outlier samples
 
-You can also identify outlier samples using hierarchical clustering. It is probably beneficial to review the clustering module as clustering is used several times within this pathway (link module). 
+You can also identify outlier samples using hierarchical clustering. It
+is probably beneficial to review the clustering module as clustering is
+used several times within this pathway (link module).
 
 ```{r}
 sampleTree <- hclust(dist(expression.data), method = "average") #Clustering samples
@@ -112,9 +150,13 @@ par(mar = c(0,4,2,0))
 plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="", cex.lab = 1.5,
 cex.axis = 1.5, cex.main = 2)
 ```
-Here you can see sample F2_221 seems to be very distant from all of the other samples indicating it is likeley an outlier sample. 
 
-We can remove the outlier using a cuttree function that requires a cutHeight. In our case it looks like the height of 15 would cut F2_221 and retain the rest of the samples. 
+Here you can see sample F2_221 seems to be very distant from all of the
+other samples indicating it is likeley an outlier sample.
+
+We can remove the outlier using a cuttree function that requires a
+cutHeight. In our case it looks like the height of 15 would cut F2_221
+and retain the rest of the samples.
 
 ```{r}
 #Setting the graphical parameters
@@ -139,68 +181,112 @@ expression.data <- expression.data[cut.sampleTree==1, ]
 
 ### Pairwise Gene Co-expression similarity
 
-The first step in network construction is to identify some sort of similarity measurement between pairs of nodes (genes). A similarity measurement represents the concordance of gene expression profiles across experiments/samples. In WGCNA the similarity measurement for each pair of genes (gene a and gene b) is denoted by its  Pearson correlation coefficient (link module). 
+The first step in network construction is to identify some sort of
+similarity measurement between pairs of nodes (genes). A similarity
+measurement represents the concordance of gene expression profiles
+across experiments/samples. In WGCNA the similarity measurement for each
+pair of genes (gene a and gene b) is denoted by its Pearson correlation
+coefficient (link module).
 
-For unsigned networks we take the absolute value of the correlation. So the similarity measurement is denoted by: 
+For unsigned networks we take the absolute value of the correlation. So
+the similarity measurement is denoted by:
 
-sab=|cor(a, b)|
+sab=\|cor(a, b)\|
 
-It is more common practice to create a signed network. As unsigned networks make biological interpretation of results extremely difficult. If the network is unsigned, we do not know if the gene is up or down regulated in the sample trait, just that its expression is significantly different. 
- 
-The similarity measurement for a signed network is calculated as follows:
+It is more common practice to create a signed network. As unsigned
+networks make biological interpretation of results extremely difficult.
+If the network is unsigned, we do not know if the gene is up or down
+regulated in the sample trait, just that its expression is significantly
+different.
 
-sab = .5 + .5 * cor(a,b)
+The similarity measurement for a signed network is calculated as
+follows:
+
+sab = .5 + .5 \* cor(a,b)
 
 ### Adjacency: Pairwise connection
 
-The next step after identifying node similarity is the genes pair adjacency. Adjacency is the result of converting the co-expression similarity measurement (Pearson correlation coefficient) into a connection strength. Nodes are considered connected if they have a significant pairwise correlation association. 
+The next step after identifying node similarity is the genes pair
+adjacency. Adjacency is the result of converting the co-expression
+similarity measurement (Pearson correlation coefficient) into a
+connection strength. Nodes are considered connected if they have a
+significant pairwise correlation association.
 
-An Adjacency matrix is the encoding of the connection between each pair of nodes 
+An Adjacency matrix is the encoding of the connection between each pair
+of nodes
 
-The generation of the adjacency matrix uses an adjacency function for its conversion. The function and its parameters vary based on what type of network construction you are trying to perform. 
+The generation of the adjacency matrix uses an adjacency function for
+its conversion. The function and its parameters vary based on what type
+of network construction you are trying to perform.
 
-  - In unweighted networks, the adjacency matrix indicates whether or not a pair of nodes are connected in a binary fasion (connected or not connected, entries of 1 or 0)
+-   In unweighted networks, the adjacency matrix indicates whether or
+    not a pair of nodes are connected in a binary fasion (connected or
+    not connected, entries of 1 or 0)
 
-- unweighted networks utilize the signum function with the input of a hard threshold parameter τ
-  
-  aij = signum (sij, τ) ≡{1 if sij ≥ τ 
-                          0 if sij < τ}
-                          
-Here you can see the similarity measurement is compared to a hard threshold parameter of τ. If the similarity measurement is greater than τ the pair of genes are assigned a value of 1 (connected) in the adjacency matrix.  If the similarity measurement is less than τ, the pair is assigned a 0 (not connected) in the adjacency matrix. 
+-   unweighted networks utilize the signum function with the input of a
+    hard threshold parameter τ
 
-Utilizing a hard threshold can mean you lose alot of information. If you set the threshold to .9, even if a pair has a similarity of .89999999999 they will be considered to have no connection. 
+    aij = signum (sij, τ) ≡{1 if sij ≥ τ 0 if sij \< τ}
 
-In weighted networks the adjacency/connection is not binary and therefore can also distinguish the strength of connection.
+Here you can see the similarity measurement is compared to a hard
+threshold parameter of τ. If the similarity measurement is greater than
+τ the pair of genes are assigned a value of 1 (connected) in the
+adjacency matrix. If the similarity measurement is less than τ, the pair
+is assigned a 0 (not connected) in the adjacency matrix.
 
-- weighted networks utilize a power function based on a soft threshold parameter β 
-  
-  aij = power (sij,β) = |sij|^β
+Utilizing a hard threshold can mean you lose alot of information. If you
+set the threshold to .9, even if a pair has a similarity of .89999999999
+they will be considered to have no connection.
 
-Here you can see the adjacency matrix value is calculated by raising the similarity measurement to the defined threshold parameter β. 
+In weighted networks the adjacency/connection is not binary and
+therefore can also distinguish the strength of connection.
 
-#### Determining the soft power threshold 
+-   weighted networks utilize a power function based on a soft threshold
+    parameter β
 
-The choice of the parameter determines the sensitivity and specificity of the pairwise connection strengths. 
+    aij = power (sij,β) = \|sij\|\^β
 
-To determine the β parameter in a weighted network analysis we try to maximize the scale-free topology model fit (R^2 value under a linear regression analysis), while minimizing the number of connections lost when fitting the model (maintaining a high mean number of connections). As R^2 values approach 1, we usually see networks with very few connections. Usually this happy medium occurs at R^2 of > .8.  
+Here you can see the adjacency matrix value is calculated by raising the
+similarity measurement to the defined threshold parameter β.
 
-scale-free topology is based on the idea that the probability that a node is connected with k other nodes decays as a power law:
-  - p(k)~ k^(-γ)
+#### Determining the soft power threshold
 
-for more information about scale free topology assumptions look at:  https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html (Section 4.2)
+The choice of the parameter determines the sensitivity and specificity
+of the pairwise connection strengths.
 
-Again the WGCNA package has a built in function that helps us determine what the appropriate β parameter will be to calculate our adjacency matrix. The pickSoftThreshold() function calculates multiple networks all based on different β values and obtaining the R^2 values for the networks scale-free topology fit as well as the mean connectivity.
+To determine the β parameter in a weighted network analysis we try to
+maximize the scale-free topology model fit (R\^2 value under a linear
+regression analysis), while minimizing the number of connections lost
+when fitting the model (maintaining a high mean number of connections).
+As R\^2 values approach 1, we usually see networks with very few
+connections. Usually this happy medium occurs at R\^2 of \> .8.
+
+scale-free topology is based on the idea that the probability that a
+node is connected with k other nodes decays as a power law: - p(k)\~
+k\^(-γ)
+
+for more information about scale free topology assumptions look at:
+<https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html>
+(Section 4.2)
+
+Again the WGCNA package has a built in function that helps us determine
+what the appropriate β parameter will be to calculate our adjacency
+matrix. The pickSoftThreshold() function calculates multiple networks
+all based on different β values and obtaining the R\^2 values for the
+networks scale-free topology fit as well as the mean connectivity.
 
 ```{r}
 spt <- pickSoftThreshold(expression.data) 
 spt
 ```
 
-We can then plot this data.frame to better visualize what β value we should choose. 
+We can then plot this data.frame to better visualize what β value we
+should choose.
 
-Reminder: We should be maximizing the R^2 value and minimizing mean connectivity.
+Reminder: We should be maximizing the R\^2 value and minimizing mean
+connectivity.
 
-Plot the R^2 values as a function of the soft thresholds 
+Plot the R\^2 values as a function of the soft thresholds
 
 ```{r}
 plot(spt$fitIndices[,1],spt$fitIndices[,2],
@@ -219,13 +305,19 @@ main = paste("Mean connectivity"))
 text(spt$fitIndices[,1], spt$fitIndices[,5], labels= spt$fitIndices[,1],col="red")
 ```
 
-We can determine our soft power threshold should be set to 6 as it is the lowest spt to reach an R^2 value above 0.80. 
+We can determine our soft power threshold should be set to 6 as it is
+the lowest spt to reach an R\^2 value above 0.80.
 
-Note: the higher the β value, the stronger the connection will be of highly correlated gene expression profiles and the more devalued low correlations will be.
+Note: the higher the β value, the stronger the connection will be of
+highly correlated gene expression profiles and the more devalued low
+correlations will be.
 
 #### Calling the adjacency function
 
-Now that we have our soft threshold power determined we can call on the adjacency function of the WGCNA package. This function calculates the similarity measurement and transforms the similarity by the adjacency function and outputs a weighted network adjacency matrix.
+Now that we have our soft threshold power determined we can call on the
+adjacency function of the WGCNA package. This function calculates the
+similarity measurement and transforms the similarity by the adjacency
+function and outputs a weighted network adjacency matrix.
 
 ```{r}
 softPower <- 6
@@ -234,32 +326,47 @@ adjacency <- adjacency(expression.data, power = softPower)
 
 ## Module Construction
 
-### Defining Dissimilarity 
+### Defining Dissimilarity
 
-The Adjacency matrix is then used to define measures of node (gene) dissimilarity for module construction (or distance of a gene from every other gene in the system). 
+Once we create the Adjacency matrix, it is then used to define measures of node (gene)
+dissimilarity for **module** construction (or distance of a gene from every
+other gene in the system).
 
-NOTE: This is due to the fact that dissimilarity is used in traditional cluster analyses. 
+Lets quickly define module before we go on: A module is a group of gene profiles that are highly
+correlated, or have a high topological overlap. 
 
-#### Topological Overlap Matrix 
+NOTE: This is due to the fact that dissimilarity is used in traditional
+cluster analyses.
 
-When it comes to generating modules,the TOM-based dissimilarity is preferentially used over dissimilarity based on correlation coefficients because TOM-based dissimilarity generates more distinct modules. 
+#### Topological Overlap Matrix
 
-For information about why topological overlap is used see: https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html (Appendix A)
+When it comes to generating modules,the TOM-based dissimilarity is
+preferentially used over dissimilarity based on correlation coefficients
+because TOM-based dissimilarity generates more distinct modules.
 
-Convert the adjacency matrix into a topological overlap matrix.The topological overlap of two nodes is an indicator of their relative interconnectedness (or similarity) with respect to the entire system. (a network proximity measure)
+For information about why topological overlap is used see:
+<https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html>
+(Appendix A)
 
-Therefore to find dissimilarity you can subtract the TOM from 1. 
+To find our TOM-based dissimilarities, we will convert the adjacency matrix into a topological overlap matrix.The topological overlap of two nodes is an indicator of their relative
+interconnectedness (or similarity) with respect to the entire system. (a
+network proximity measure). 
+
+Therefore to find dissimilarity you can subtract the TOM from 1.
 
 ```{r}
 TOM <- TOMsimilarity(adjacency)
 TOM.dissimilarity <- 1-TOM
 ```
 
-### Hierarchical Clustering Analysis 
+### Hierarchical Clustering Analysis
 
-The dissimilarity/distance measures are then clustered using linkage hierarchical clustering (link the module) and a dendrogram (cluster tree) is constructed where the leafs correspond to genes and branches correlate with modules (groups of gene profiles that are highly correlated, or have a high topological overlap). 
+The measures of dissimilarity found using TOM are then clustered using linkage
+hierarchical clustering. Then a dendrogram (cluster
+tree) is constructed where the leafs correspond to genes and branches
+correlate with modules.
 
-(similar to phylogenetic tree construction and PCA analysis, link both of these modules? NO?)
+For more on hierarchical clustering, see this module: https://fuzzyatelin.github.io/bioanth-stats/module-25/module-25.html 
 
 ```{r}
 geneTree <- hclust(as.dist(TOM.dissimilarity), method = "average")
@@ -270,22 +377,23 @@ plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilari
 labels = FALSE, hang = 0.04)
 ```
 
-******* RETURN TO THIS SECTION: Note idk how to determine module cutoff points ********
+\*\*\*\*\*\*\* RETURN TO THIS SECTION: Note idk how to determine module
+cutoff points \*\*\*\*\*\*\*\*
 
 ```{r}
 Modules <- cutreeDynamic(dendro = geneTree, distM = TOM.dissimilarity, deepSplit = 2, pamRespectsDendro = FALSE, minClusterSize = 30)
 table(Modules) #returns a table of the counts of factor levels in an object. In this case how many genes are assigned to each created module. 
 ```
 
-Here we can see 22 modules were created. The Label 0 is reserved for unassigned genes, genes that do not fit in any module. 
+Here we can see 22 modules were created. The Label 0 is reserved for
+unassigned genes, genes that do not fit in any module.
 
-We can now plot the module assignment under the gene dendrogram. 
+We can now plot the module assignment under the gene dendrogram.
 
 ```{r}
 ModuleColors <- labels2colors(Modules) #assigns module numbers to colors
 table(ModuleColors) #returns the counts of each color (again the number of genes within a module)
 ```
-
 
 ```{r}
 plotDendroAndColors(geneTree, ModuleColors,"Module",
@@ -296,28 +404,42 @@ main = "Gene dendrogram and module colors")
 
 ### Module Eigengene identification
 
-A ME (Module Eigengene) is a standardized gene expression profile (the 1st principal component; link PCA analysis) of the expression matrix.
+A ME (Module Eigengene) is a standardized gene expression profile (the
+1st principal component; link PCA analysis) of the expression matrix.
 
 ```{r}
 MElist <- moduleEigengenes(expression.data, colors = ModuleColors) 
 MEs <- MElist$eigengenes
 ```
 
-## Module Merging 
+## Module Merging
 
-To further condense the clusters (branches) into more meaningful modules you can cluster modules based on pairwise eigengene correlations and merge the modules that have similar expression profiles. 
+To further condense the clusters (branches) into more meaningful modules
+you can cluster modules based on pairwise eigengene correlations and
+merge the modules that have similar expression profiles.
 
-Side note: an eigengene is the gene whose expression is representative of the the majority of genes expressed within a module (says prof Schmitt)
+Side note: an eigengene is the gene whose expression is representative
+of the the majority of genes expressed within a module (says prof
+Schmitt)
 
-In order to do cluster analysis we must first find a measurement of dissimilarity (distance) between modules. 
+In order to do cluster analysis we must first find a measurement of
+dissimilarity (distance) between modules.
 
-However, because we have missing values present in our input variable, we will need to add a line of code  (use="complete"). This command removes rows of the matrix which have NA values. Removing these NAs allows ME.dissimilarity to run. This may or may not be necessary depending on your data set. 
+However, because we have missing values present in our input variable,
+we will need to add a line of code (use="complete"). This command
+removes rows of the matrix which have NA values. Removing these NAs
+allows ME.dissimilarity to run. This may or may not be necessary
+depending on your data set.
 
 ```{r}
 ME.dissimilarity = 1-cor(MElist$eigengenes, use="complete") #Calculate eigengene dissimilarity
 ```
 
-Now, using our new found measurements of dissimilarity, we will construct a cluster tree. We will also be adding a line at the height of .25. This height corresponds to a correlation of over 75%. Any branches below this line are more than 75% related, and we will thus be merging them!
+Now, using our new found measurements of dissimilarity, we will
+construct a cluster tree. We will also be adding a line at the height of
+.25. This height corresponds to a correlation of over 75%. Any branches
+below this line are more than 75% related, and we will thus be merging
+them!
 
 ```{r}
 METree = hclust(as.dist(ME.dissimilarity), method = "average") #Clustering eigengenes 
@@ -328,8 +450,11 @@ par(cex = 0.6);#scaling the graphic
 plot(METree)
 abline(h=.25, col = "red") #a height of .25 corresponds to correlation of .75
 ```
- 
-This figure shows all of the modules which are more than 75% similar. For example you can see that MEcyan and ME purple are more than 75% similar Now we will merge these two modules, and others like them using the mergeCloseModules command 
+
+This figure shows all of the modules which are more than 75% similar.
+For example you can see that MEcyan and MEpurple are more than 75%
+similar Now we will merge these two modules, and others like them using
+the mergeCloseModules command
 
 ```{r}
 merge <- mergeCloseModules(expression.data, ModuleColors, cutHeight = .25)
@@ -341,13 +466,17 @@ mergedColors = merge$colors
 mergedMEs = merge$newMEs
 ```
 
-The similar modules are now merged! Lets compare them with our original modules by creating another dendrogram
+The similar modules are now merged! Lets compare them with our original
+modules by creating another dendrogram
 
-####Challenge #
+#### Challenge \#
 
-Using the knowledge you gained from the Hierarchical Clustering Analysis section, create a dendrogram which shows both the original AND merged module colors. 
+Using the knowledge you gained from the Hierarchical Clustering Analysis
+section, create a dendrogram which shows both the original AND merged
+module colors.
 
-####Answer
+#### Answer:
+
 ```{r}
 plotDendroAndColors(geneTree, cbind(ModuleColors, mergedColors), 
 c("Original Module", "Merged Module"),
@@ -356,16 +485,22 @@ addGuide = TRUE, guideHang = 0.05,
 main = "Gene dendrogram and module colors for original and merged modules")
 ```
 
-Coooollioo! you can see that generally, there are less colors in the merged modules row, showing that our modules which were more than 75% similar have merged. For example, the lime green and red section merged into one large lime green section. This new merged output is cleaner and further identifies groups of highly correlated genes which co-occur across samples.
+Coooollioo! you can see that generally, there are less colors in the
+merged modules row, showing that our modules which were more than 75%
+similar have merged. For example, the lime green and red section merged
+into one large lime green section. This new merged output is cleaner and
+further identifies groups of highly correlated genes which co-occur
+across samples.
 
 ## External Trait Matching
 
-Once you have constructed the network (the adjacency matrix) and divided it into meaningful modules, you can begin to relate the network to external traits. 
+Once you have constructed the network (the adjacency matrix) and divided
+it into meaningful modules, you can begin to relate the network to
+external traits.
 
-  
-Ex. Relate the network to External sample information (traits)
-  - facilitates identification of novel target genes 
-  - Sample traits must be continuous variables? 
+Ex. Relate the network to External sample information (traits) -
+facilitates identification of novel target genes - Sample traits must be
+continuous variables?
 
 Reading in Trait Data Table
 
@@ -375,16 +510,18 @@ traitData <- read.csv(t, header = TRUE, stringsAsFactors = FALSE)
 head(traitData)
 ```
 
-Cleaning Trait Data 
+Cleaning Trait Data
 
 ```{r}
 allTraits <- traitData[, -c(31, 16)] #removing notes and comments sections 
 allTraits <- allTraits[, c(2, 11:36) ] #pulling out only continuous traits 
 ```
 
-Matching Trait and Expression Data 
+Matching Trait and Expression Data
 
-Forming a data frame analagous to expression data that can hold clinical traits 
+Forming a data frame analagous to expression data that can hold clinical
+traits
+
 ```{r}
 Samples <- rownames(expression.data)
 traitRows <- match(Samples, allTraits$Mice)
@@ -405,11 +542,11 @@ groupLabels = names(datTraits),
 main = "Sample dendrogram and trait heatmap")
 ```
 
+### Module-Trait associations
 
-### Module-Trait associations 
-
-Identify modules that are significantly associated with external traits by correlating  the trait with eigengenes (summary or representative gene for each module) and look at the significance of the correlation.
-
+Identify modules that are significantly associated with external traits
+by correlating the trait with eigengenes (summary or representative gene
+for each module) and look at the significance of the correlation.
 
 ```{r}
 # Define numbers of genes and samples
@@ -442,21 +579,33 @@ zlim = c(-1,1),
 main = paste("Module-trait relationships"))
 ```
 
-### Target Gene Identification 
+### Target Gene Identification
 
-For example, as was discussed in the introduction, you can now identify novel target genes in molecular pathways by looking at the genes intramodular connectivity and its gene significance. 
+For example, as was discussed in the introduction, you can now identify
+novel target genes in molecular pathways by looking at the genes
+intramodular connectivity and its gene significance.
 
-We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitativemeasure of module membership MM as the correlation of the module eigengene and the gene expression profile. Thisallows us to quantify the similarity of all genes on the array to every module.
+We quantify associations of individual genes with our trait of interest
+(weight) by defining Gene Significance GS as (the absolute value of) the
+correlation between the gene and the trait. For each module, we also
+define a quantitativemeasure of module membership MM as the correlation
+of the module eigengene and the gene expression profile. Thisallows us
+to quantify the similarity of all genes on the array to every module.
 
+Connectivity - how connected is that speficic node (how many nodes have
+high correlation with that node). High connectivity indicates a hub gene
+(central to many nodes). - high connectivity can be identified by a high
+topological overlap
 
-  Connectivity - how connected is that speficic node (how many nodes have high correlation with that node). High connectivity indicates a hub gene (central to many nodes). 
-  - high connectivity can be identified by a high topological overlap
-  
-  Whole Network connectivity - a measure for how well the node is connected throughout the entire system
-  
-  Intramodular connectivity - a measure for how well that node belongs to its module. How well that node is connected within its module. 
+Whole Network connectivity - a measure for how well the node is
+connected throughout the entire system
 
-  Gene significance - (the pairwise correlation between a sample trait and the eigengene, and the p-value for each module). Module eigengenes correlated with the sample trait to determine the eigengene significance 
+Intramodular connectivity - a measure for how well that node belongs to
+its module. How well that node is connected within its module.
+
+Gene significance - (the pairwise correlation between a sample trait and
+the eigengene, and the p-value for each module). Module eigengenes
+correlated with the sample trait to determine the eigengene significance
 
 ```{r}
 # Define variable weight containing the weight column of datTrait
@@ -474,10 +623,13 @@ names(geneTraitSignificance) = paste("GS.", names(weight), sep="")
 names(GSPvalue) = paste("p.GS.", names(weight), sep="")
 ```
 
-
 Intramodular analysis: identifying genes with high GS and MM
 
-Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high modulemembership in interesting modules. As an example, we look at the brown module that has the highest association with weight. We plot a scatterplot of Gene Significance vs. Module Membership in the brown module:
+Using the GS and MM measures, we can identify genes that have a high
+significance for weight as well as high modulemembership in interesting
+modules. As an example, we look at the brown module that has the highest
+association with weight. We plot a scatterplot of Gene Significance vs.
+Module Membership in the brown module:
 
 ```{r}
 module = "brown"
@@ -491,27 +643,40 @@ main = paste("Module membership vs. gene significance\n"),
 cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 ```
 
-Clearly, GS and MM are highly correlated,illustrating that genes highly significantly associated with a trait are often also the most important (central) elements of modules associated with the trait. The reader is encouraged to try this code with other significance trait/module correlation (for example, the magenta, midnightblue, and red modules with weight).
+Clearly, GS and MM are highly correlated,illustrating that genes highly
+significantly associated with a trait are often also the most important
+(central) elements of modules associated with the trait. The reader is
+encouraged to try this code with other significance trait/module
+correlation (for example, the magenta, midnightblue, and red modules
+with weight).
 
-We have found modules with high association with our trait of interest, and have identified their central players by the Module Membership measure
-  
-## GO Analysis? 
+We have found modules with high association with our trait of interest,
+and have identified their central players by the Module Membership
+measure
 
-Then relate modules to GO terms to assess their possible biological function beyond eigengene analysis
+## GO Analysis?
 
+Then relate modules to GO terms to assess their possible biological
+function beyond eigengene analysis
 
-## Why use WGCNA: 
-  - Alleviates the multiple testing problem that comes with most microarray analysis by condensing thousands of genes to on average 10 modules of similarly expressed genes and using eigengenes as module representatives. 
-  - Helpful for data reduction in systems biology and bioinformatics. 
+## Why use WGCNA:
 
+-   Alleviates the multiple testing problem that comes with most
+    microarray analysis by condensing thousands of genes to on average
+    10 modules of similarly expressed genes and using eigengenes as
+    module representatives.
+-   Helpful for data reduction in systems biology and bioinformatics.
 
-## References: 
+## References:
 
-1. Hovarth's original Tutorial 
-- https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/
-2. R in Action Chapter 16 
-3. Langfelder and Horvath 2008 
-- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2631488/
-4. Horvath and Zhang (2005) doi: 10.2202/1544-6115.1128
-https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html
+1.  Hovarth's original Tutorial
 
+-   <https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/>
+
+2.  R in Action Chapter 16
+3.  Langfelder and Horvath 2008
+
+-   <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2631488/>
+
+4.  Horvath and Zhang (2005) doi: 10.2202/1544-6115.1128
+    <https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html>
