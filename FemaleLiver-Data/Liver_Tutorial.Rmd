@@ -552,8 +552,11 @@ To convert the adjacency matrix into a TOM similarity matrix we can call the WGC
 ```{r}
 TOM <- TOMsimilarity(adjacency)
 ```
+## Challenge #?
+Our current matrix gives us the similarity between genes. How should we convert this into measures of dissimilarity? 
 
-Then to convert this matrix into a dissimilarity matrix you can subtract the TOM object from 1. 
+### Answer: 
+To convert this matrix into a dissimilarity matrix you can subtract the TOM object from 1. 
 
 ```{r}
 TOM.dissimilarity <- 1-TOM
@@ -567,20 +570,27 @@ hierarchical clustering. Then a dendrogram (cluster
 tree) is constructed where the leafs correspond to genes and branches
 correlate with modules.
 
+<<<<<<< HEAD
 For more on hierarchical clustering, see this module: https://fuzzyatelin.github.io/bioanth-stats/module-25/module-25.html 
 =======
 The dissimilarity/distance measures are then clustered using linkage hierarchical clustering and a dendrogram (cluster tree) of genes is constructed.
 >>>>>>> 3799442cbc54f8ee7bcc27f6826b367045e9cf7f
+=======
+The dissimilarity or distance measures are then clustered using linkage hierarchical clustering and a dendrogram (cluster tree) of genes is constructed.
+>>>>>>> f2c114567c4fd5a84098dc0be3a27d33f5253521
 
 ```{r}
-geneTree <- hclust(as.dist(TOM.dissimilarity), method = "average")
+#creating the dendrogram 
+geneTree <- hclust(as.dist(TOM.dissimilarity), method = "average") 
 ```
 
 ```{r}
+#plotting the dendrogram
 sizeGrWindow(12,9)
-plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity",
+plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilarity", 
 labels = FALSE, hang = 0.04)
 ```
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 \*\*\*\*\*\*\* RETURN TO THIS SECTION: Note idk how to determine module
@@ -588,6 +598,9 @@ cutoff points \*\*\*\*\*\*\*\*
 =======
 To identify modules from this gene dendrogram it is common practice to argue a minimum cluster size to the cutreeDynamic() function. For genomic data it is more beneficial to set minimum module sizes relatively high as we are working with high loads of data. The authors of WGCNA recommend to start at a minClusterSize = 30. 
 >>>>>>> 3799442cbc54f8ee7bcc27f6826b367045e9cf7f
+=======
+To identify modules from this gene dendrogram, we will use the cutreeDynamic() function. This will allow us to set a minimum cluster size. For genomic data like this it is more beneficial to set mminimum module sizes relatively high as we are working with high loads of data. The authors of WGCNA recommend to start at a minClusterSize = 30. 
+>>>>>>> f2c114567c4fd5a84098dc0be3a27d33f5253521
 
 ```{r}
 Modules <- cutreeDynamic(dendro = geneTree, distM = TOM.dissimilarity, deepSplit = 2, pamRespectsDendro = FALSE, minClusterSize = 30)
@@ -606,11 +619,12 @@ We can now plot the module assignment under the gene dendrogram for visualizatio
 >>>>>>> 3799442cbc54f8ee7bcc27f6826b367045e9cf7f
 
 ```{r}
-ModuleColors <- labels2colors(Modules) #assigns module numbers to colors
-table(ModuleColors) #returns the counts of each color (again the number of genes within a module)
+ModuleColors <- labels2colors(Modules) #assigns each module number a color
+table(ModuleColors) #returns the counts for each color (aka the number of genes within each module)
 ```
 
 ```{r}
+#plots the gene dendrogram with the module colors
 plotDendroAndColors(geneTree, ModuleColors,"Module",
 dendroLabels = FALSE, hang = 0.03,
 addGuide = TRUE, guideHang = 0.05,
@@ -633,6 +647,7 @@ MElist <- moduleEigengenes(expression.data, colors = ModuleColors)
 MEs <- MElist$eigengenes 
 MEs
 ```
+We have now identified the eigengenes for our data. 
 
 ## Module Merging
 
@@ -652,8 +667,12 @@ Schmitt)
 ---
 >>>>>>> 3799442cbc54f8ee7bcc27f6826b367045e9cf7f
 
+<<<<<<< HEAD
 In order to do cluster analysis we must first find a measurement of
 dissimilarity (distance) between modules.
+=======
+In order to do cluster analysis we must first find a measurement of dissimilarity (distance) between module eigengenes. 
+>>>>>>> f2c114567c4fd5a84098dc0be3a27d33f5253521
 
 However, because we have missing values present in our input variable,
 we will need to add a line of code (use="complete"). This command
@@ -678,11 +697,16 @@ par(cex = 0.6);#scaling the graphic
 plot(METree)
 abline(h=.25, col = "red") #a height of .25 corresponds to correlation of .75
 ```
+<<<<<<< HEAD
 
 This figure shows all of the modules which are more than 75% similar.
 For example you can see that MEcyan and MEpurple are more than 75%
 similar Now we will merge these two modules, and others like them using
 the mergeCloseModules command
+=======
+ 
+This figure shows all of the modules which are more than 75% similar. For example you can see that MEcyan and MEpurple are more than 75% similar. Now we will merge these two modules, and others like them using the mergeCloseModules command 
+>>>>>>> f2c114567c4fd5a84098dc0be3a27d33f5253521
 
 ```{r}
 merge <- mergeCloseModules(expression.data, ModuleColors, cutHeight = .25)
@@ -708,8 +732,12 @@ module colors.
 #### Answer:
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 #### Answer
+=======
+#### Answer:
+>>>>>>> f2c114567c4fd5a84098dc0be3a27d33f5253521
 
 >>>>>>> 3799442cbc54f8ee7bcc27f6826b367045e9cf7f
 ```{r}
