@@ -12,7 +12,7 @@ title: "Weighted Gene Network Correlation Analysis"
 author: "Victoria French, CeCe Gerstenbacher, Warrenkevin Henderson, and Elizabeth Varghese"
 date: "11/29/2021"
 output: 
-  html_document:
+  html_document: 
     toc: true
     toc_float:
       collapsed: true
