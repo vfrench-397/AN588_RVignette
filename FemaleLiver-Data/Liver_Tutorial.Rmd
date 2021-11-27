@@ -14,7 +14,7 @@ output:
 
 # Weighted Gene Correlation Network Analysis
 
-Objective: To successfully run network and module construction with gene expression measurements and to use that network to identify potential candidate genes associated with measured phenotypes. 
+> Objective: To successfully run network and module construction with gene expression measurements and to use that network to identify potential candidate genes associated with measured phenotypes. 
 
 WGCNA is a variation of correlation network construction. Networks are visual representations of interactions between 'nodes' in a system. The nodes in Weighted Gene Correlation Network Analysis are individual genes. Therefore WGCNA is a great tool for visualizing patterns and relationships between gene expression profiles (transcripts). WGCNA can: 
 
@@ -43,7 +43,7 @@ BiocManager is a package that will facilitate the installation of the other two 
 > **NOTE**: Installing these packages will result in prompts that require you to input additional commands at the command line. 
 
 
-```{r, warning=FALSE}
+```{r, warning=FALSE,message= FALSE}
 library(WGCNA)
 library(flashClust)
 library(curl)
@@ -217,7 +217,7 @@ similarity measurement to the defined threshold parameter \beta.
 > **NOTE**: The WGCNA package has a built in function called ```adjacency()``` that will generate the pairwise similarity measurements and the adjacency matrix but before we call the function we need to identify what value we want to use for our threshold parameter.
 
 
-#### Determining the soft power threshold 
+#### Determining the Soft Power Threshold 
 
 The choice of the threshold parameter determines the sensitivity and specificity of the pairwise connection strengths (adjacency). 
 
@@ -263,7 +263,7 @@ We can determine our soft power threshold should be set to 6 as it is the spt th
 
 > **NOTE**: the higher the \beta value, the stronger the connection strength will be of highly correlated gene expression profiles and the more devalued low correlations will be.
 
-#### Challenge 1
+### **CHALLENGE 1**
 
 Using the following data set find its appropriate soft threshold parameter.
 
@@ -275,7 +275,7 @@ male.expression.data <- as.data.frame(t(male.expression.data))
 names(male.expression.data) <- male.liver.data$substanceBXH
 ```
 
-#### Answer 1
+### **ANSWER 1**
 
 ```{r}
 spt <- pickSoftThreshold(male.expression.data) 
@@ -297,7 +297,7 @@ main = paste("Mean connectivity"))
 text(spt$fitIndices[,1], spt$fitIndices[,5], labels= spt$fitIndices[,1],col="red")
 ```
 
-### Calling the adjacency function
+### Calling the Adjacency Function
 
 Now that we have our soft threshold power determined we can call on the ```adjacency()``` function of the WGCNA package. 
 
@@ -333,11 +333,11 @@ To convert the adjacency matrix into a TOM similarity matrix we can call the WGC
 TOM <- TOMsimilarity(adjacency)
 ```
 
-#### Challenge 2
+### **CHALLENGE 2**
 
 Our current matrix gives us the similarity between genes. How should we convert this into measures of dissimilarity? 
 
-#### Answer 2
+### **ANSWER 2**
 
 To convert this matrix into a dissimilarity matrix you can subtract the TOM object from 1. 
 
@@ -385,7 +385,7 @@ addGuide = TRUE, guideHang = 0.05,
 main = "Gene dendrogram and module colors")
 ```
 
-### Module Eigengene identification
+### Module Eigengene Identification
 
 A ME (Module Eigengene) is the standardized gene expression profile for a given module.
 
@@ -394,7 +394,7 @@ To identify the Module Eigengene we can call on the expression data into the mod
 ```{r}
 MElist <- moduleEigengenes(expression.data, colors = ModuleColors) 
 MEs <- MElist$eigengenes 
-MEs
+head(MEs)
 ```
 
 We have now identified the eigengenes for our data. 
@@ -447,13 +447,13 @@ mergedMEs = merge$newMEs
 The similar modules are now merged! Lets compare them with our original
 modules by creating another dendrogram
 
-#### Challenge 3
+### **CHALLENGE 3**
 
 Using the knowledge you gained from the Hierarchical Clustering Analysis
 section, create a dendrogram which shows both the original AND merged
 module colors.
 
-#### Answer 3
+### **ANSWER 3**
 
 ```{r}
 plotDendroAndColors(geneTree, cbind(ModuleColors, mergedColors), 
@@ -612,11 +612,11 @@ Clearly, GS and MM are highly correlated,illustrating that genes highly signific
 
 We have found modules with high association with our trait of interest, and have identified their central players by the Module Membership measure
 
-#### Challenge 4
+### **CHALLENGE 4**
 
 Try this analysis for other significant trait/module correlations from the heat map 
 
-#### Answer 4
+### **ANSWER 4**
 
 ```{r}
 module = "magenta"
