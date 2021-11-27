@@ -1,19 +1,18 @@
 ---
 title: "Weighted Gene Network Correlation Analysis"
-author: "Victoria French, CeCe Gerstenbacher, Warrenkevin Henderson, and Elizabeth Varghese"
+author: 'Victoria French, CeCe Gerstenbacher, Warrenkevin Henderson, and Elizabeth
+  Varghese'
 date: "11/29/2021"
-output: 
-  html_document: 
-    toc: true
+output:
+  html_document:
+    toc: yes
     toc_float:
-      collapsed: true
-      smooth_scroll: true
-    theme: yeti 
+      collapsed: yes
+      smooth_scroll: yes
+    theme: yeti
 ---
 
 # Weighted Gene Correlation Network Analysis
-
-![alt text](https://i.gifer.com/J4x.gif)
 
 Objective: To successfully run network and module construction with gene expression measurements and to use that network to identify potential candidate genes associated with measured phenotypes. 
 
@@ -26,7 +25,7 @@ WGCNA is a variation of correlation network construction. Networks are visual re
 
 All of these are important for identifying potential candidate genes associated with measured traits as well as identifying genes that are consistently co-expressed and could be contributing to similar molecular pathways. Using WGCNA is also extremely useful statistically as it accounts for inter-individual variation in gene expression and alleviates issues associated with multiple testing. 
 
-## Setup
+## Preliminaries 
 
 Before running through the following code you will need to install the
 following packages: \{BiocManager\}, \{WGCNA\}, \{flashClust\}
@@ -50,7 +49,6 @@ library(flashClust)
 library(curl)
 ```
 
-## Data input
 
 WGCNA utilizes gene expression data from micro array or RNA-seq experiments. For a basic understanding of these experiments you can view [this educational video](https://www.youtube.com/watch?v=Hv5flUOsE0s). 
 
@@ -66,8 +64,6 @@ head(liver.data)
 
 This .csv file contains quantified and normalized gene expression data from livers of several F2 female mice. 
 
-![alt text](https://66.media.tumblr.com/4e94770dc5af4083d5f63f16b4cbdbb1/tumblr_n4chqvOoOF1tzq2cgo4_250.gif)
-
 For the purposes of this tutorial it is just important to understand the values in our data set are gene expression levels relative to a control.  
 
 
@@ -76,7 +72,7 @@ For the purposes of this tutorial it is just important to understand the values 
 
 The data set also contains a lot of additional trait data not relevant to our analysis and is in an incompatible format for the WGCNA pathway. Therefore we need to reformat the data so it is conducive to the WGCNA package functions. 
 
-## Cleaning Data 
+## Data Cleaning and Removing Outliers 
 
 First, the additional trait data needs to be removed.
 
@@ -91,8 +87,6 @@ expression.data <- as.data.frame(t(expression.data)) #transforming the data.fram
 names(expression.data) <- liver.data$substanceBXH
 #renaming the columns so we don't lose the gene IDs
 ```
-
-## Identifying Outliers
 
 ### Identifying Outlier Genes 
 
@@ -269,7 +263,7 @@ We can determine our soft power threshold should be set to 6 as it is the spt th
 
 > **NOTE**: the higher the \beta value, the stronger the connection strength will be of highly correlated gene expression profiles and the more devalued low correlations will be.
 
-### Challenge 
+#### Challenge 1
 
 Using the following data set find its appropriate soft threshold parameter.
 
@@ -281,7 +275,7 @@ male.expression.data <- as.data.frame(t(male.expression.data))
 names(male.expression.data) <- male.liver.data$substanceBXH
 ```
 
-### Answer 
+#### Answer 1
 
 ```{r}
 spt <- pickSoftThreshold(male.expression.data) 
@@ -303,7 +297,7 @@ main = paste("Mean connectivity"))
 text(spt$fitIndices[,1], spt$fitIndices[,5], labels= spt$fitIndices[,1],col="red")
 ```
 
-#### Calling the adjacency function
+### Calling the adjacency function
 
 Now that we have our soft threshold power determined we can call on the ```adjacency()``` function of the WGCNA package. 
 
@@ -327,7 +321,7 @@ In order to utilize the clustering functions in R we must transform our adjacenc
 > **NOTE**: This is due to the fact that dissimilarity is used in traditional
 cluster analyses.
 
-#### Topological Overlap Matrix
+### Topological Overlap Matrix
 
 The TOM-based dissimilarity is preferentially used over dissimilarity based on correlation coefficients because TOM-based dissimilarity generates more distinct modules.
 
@@ -339,11 +333,11 @@ To convert the adjacency matrix into a TOM similarity matrix we can call the WGC
 TOM <- TOMsimilarity(adjacency)
 ```
 
-## Challenge #?
+#### Challenge 2
 
 Our current matrix gives us the similarity between genes. How should we convert this into measures of dissimilarity? 
 
-### Answer: 
+#### Answer 2
 
 To convert this matrix into a dissimilarity matrix you can subtract the TOM object from 1. 
 
@@ -453,13 +447,13 @@ mergedMEs = merge$newMEs
 The similar modules are now merged! Lets compare them with our original
 modules by creating another dendrogram
 
-### Challenge \#
+#### Challenge 3
 
 Using the knowledge you gained from the Hierarchical Clustering Analysis
 section, create a dendrogram which shows both the original AND merged
 module colors.
 
-#### Answer:
+#### Answer 3
 
 ```{r}
 plotDendroAndColors(geneTree, cbind(ModuleColors, mergedColors), 
@@ -481,8 +475,6 @@ across samples.
 Once you have constructed the network (the adjacency matrix) and divided
 it into meaningful modules, you can begin to relate the network to
 external traits.
-
-### Data Input
 
 Start by reading in Trait Data Table
 
@@ -508,6 +500,8 @@ datTraits <- allTraits[traitRows, -1]
 rownames(datTraits) <- allTraits[traitRows, 1]
 ```
 
+### Module-Trait associations
+
 visualize how the clinical traits relate to the sample dendrogram
 
 ```{r}
@@ -520,8 +514,6 @@ plotDendroAndColors(sampleTree2, traitColors,
 groupLabels = names(datTraits),
 main = "Sample dendrogram and trait heatmap")
 ```
-
-### Module-Trait associations
 
 Identify modules that are significantly associated with external traits by correlating the trait with eigengenes (summary or representative gene for each module) and look at the significance of the correlation.
 
@@ -558,7 +550,7 @@ main = paste("Module-trait relationships"))
 
 Those with strong positive correlations are shaded a darker red while those with stronger negative correlations become more blue. The associated p value is also logged in parentheses underneath the correlation strength. 
 
-### Target Gene Identification
+## Target Gene Identification
 
 As was discussed in the introduction, you can now identify novel target genes in molecular pathways by looking at the genes intramodular connectivity and its gene significance. 
 
@@ -620,11 +612,11 @@ Clearly, GS and MM are highly correlated,illustrating that genes highly signific
 
 We have found modules with high association with our trait of interest, and have identified their central players by the Module Membership measure
 
-### Challenge 
+#### Challenge 4
 
 Try this analysis for other significant trait/module correlations from the heat map 
 
-#### Answer
+#### Answer 4
 
 ```{r}
 module = "magenta"
