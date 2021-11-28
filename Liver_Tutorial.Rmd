@@ -687,10 +687,10 @@ plotEigengeneNetworks(MET, "Eigengene adjacency heatmap", marHeatmap = c(3,4,2,2
 plotDendrograms = FALSE, xLabelsAngle = 90)
 ```
 
-## **Challenge 5** ##
+### **CHALLENGE 5** ##
 Create a dendrogram and heatmap using two clinical traits. For example, weight AND Glucose. 
 
-## **Answer 5** ##
+### **ANSWER 5** ##
 
 ```{r}
 # Isolate weight from the clinical traits
