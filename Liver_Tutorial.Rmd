@@ -693,7 +693,7 @@ Create a dendrogram and heatmap using two clinical traits. For example, weight A
 ### **ANSWER 5** ##
 
 ```{r}
-# Isolate weight from the clinical traits
+# Isolate weight and Glucose from the clinical traits
 weight = as.data.frame(datTraits$weight_g);
 names(weight) = "weight"
 Glucose = as.data.frame(datTraits$Glucose)
