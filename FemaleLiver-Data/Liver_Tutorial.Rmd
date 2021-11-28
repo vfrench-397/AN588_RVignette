@@ -12,7 +12,7 @@ output:
     theme: yeti
 ---
 
-# Weighted Gene Correlation Network Analysis
+# WGCNA
 
 > Objective: To successfully run network and module construction with gene expression measurements and to use that network to identify potential candidate genes associated with measured phenotypes. 
 
