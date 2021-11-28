@@ -502,7 +502,7 @@ rownames(datTraits) <- allTraits[traitRows, 1]
 
 ### Module-Trait associations
 
-visualize how the clinical traits relate to the sample dendrogram
+Visualize how the clinical traits relate to the sample dendrogram.
 
 ```{r}
 # Re-cluster samples
@@ -514,8 +514,11 @@ plotDendroAndColors(sampleTree2, traitColors,
 groupLabels = names(datTraits),
 main = "Sample dendrogram and trait heatmap")
 ```
+This is the clustering dendrogram of samples based on their Euclidan distance. The white means a low value, red demonstrates a high value, and the grey areas are missing entries.
 
-Identify modules that are significantly associated with external traits by correlating the trait with eigengenes (summary or representative gene for each module) and look at the significance of the correlation.
+#### Quantifying Module Trait Associations
+
+Identify modules that are significantly associated with external traits by correlating the trait with eigengenes (summary or representative gene for each module). Correlate eigengenes with external traits, and look for significant association.
 
 ```{r}
 # Define numbers of genes and samples
@@ -527,6 +530,8 @@ nSamples = nrow(expression.data)
 module.trait.correlation = cor(mergedMEs, datTraits, use = "p")
 module.trait.Pvalue = corPvalueStudent(module.trait.correlation, nSamples)
 ```
+
+There are many modules and traits. A graphical representation will be helpful in viewing the table. Each association value is color coded by correlation value.
 
 ```{r}
 # Will display correlations and their p-values
@@ -547,8 +552,7 @@ cex.text = 0.5,
 zlim = c(-1,1),
 main = paste("Module-trait relationships"))
 ```
-
-Those with strong positive correlations are shaded a darker red while those with stronger negative correlations become more blue. The associated p value is also logged in parentheses underneath the correlation strength. 
+Each row corresponds to a module eigengene, and the columns correspond to a trait. Each cell corresponds to a p-value and correlation. Those with strong positive correlations are shaded a darker red while those with stronger negative correlations become more blue.
 
 ## Target Gene Identification
 
@@ -614,9 +618,31 @@ We have found modules with high association with our trait of interest, and have
 
 ### **CHALLENGE 4**
 
-Try this analysis for other significant trait/module correlations from the heat map 
+Try this analysis the Glucose trait/module correlations from the heat map.
+
+HINT: Define the variable "Glucose" containing the Glucose column
 
 ### **ANSWER 4**
+
+```{r}
+# Define the variable "Glucose" containing the Glucose column of datTrait
+Glucose = as.data.frame(datTraits$Glucose)
+names(Glucose) = "Glucose"
+# names (colors) of the modules
+modNames = substring(names(mergedMEs), 3)
+
+geneModuleMembership = as.data.frame(cor(expression.data, mergedMEs, use = "p"))
+MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples))
+names(geneModuleMembership) = paste("MM", modNames, sep="")
+names(MMPvalue) = paste("p.MM", modNames, sep="")
+
+
+geneTraitSignificance = as.data.frame(cor(expression.data, Glucose, use = "p"))
+GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples))
+names(geneTraitSignificance) = paste("GS.", names(Glucose), sep="")
+names(GSPvalue) = paste("p.GS.", names(Glucose), sep="")
+head(GSPvalue)
+```
 
 ```{r}
 module = "blue"
@@ -625,10 +651,62 @@ moduleGenes = mergedColors==module
 verboseScatterplot(abs(geneModuleMembership[moduleGenes,column]),
 abs(geneTraitSignificance[moduleGenes,1]),
 xlab = paste("Module Membership in", module, "module"),
-ylab = "Gene significance for body weight",
+ylab = "Gene significance for Glucose",
 main = paste("Module membership vs. gene significance\n"),
 cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 ```
+## Network Visualization of Eigengenes
+
+It is possible to study the relationship among found modules. Eigengenes can be used as representative profiles and quantify module similiarity by the correlation of eigengenes.
+
+You are able to generate a summary plot of the eigengene network using the function "plotEigengeneNetworks." Using this function, you are able to isolate a clinical trait (or multiple traits), to visualize how the trait fits into the eigengene network. Much like in the Target Gene Identification section, you can focus on a clinical trait, like weight, except rather than displaying the relationship in a plot, you can display the relationship on a heatmap.
+
+```{r}
+# Isolate weight from the clinical traits
+weight = as.data.frame(datTraits$weight_g);
+names(weight) = "weight"
+# Add the weight to existing module eigengenes
+MET = orderMEs(cbind(MEs, weight))
+# Plot the relationships among the eigengenes and the trait
+sizeGrWindow(5,7.5);
+par(cex = 0.9)
+plotEigengeneNetworks(MET, "", marDendro = c(0,4,1,2), marHeatmap = c(3,4,1,2), cex.lab = 0.8, xLabelsAngle
+= 90)
+```
+This function above produces a dendrogram of eigengenes and isolated trait, as well as the corresponding heat map. You can separate the two using the following code: 
+
+```{r}
+# Plot the dendrogram
+sizeGrWindow(6,6);
+par(cex = 1.0)
+plotEigengeneNetworks(MET, "Eigengene dendrogram", marDendro = c(0,4,2,0),
+plotHeatmaps = FALSE)
+# Plot the heatmap matrix (note: this plot will overwrite the dendrogram plot)
+par(cex = 1.0)
+plotEigengeneNetworks(MET, "Eigengene adjacency heatmap", marHeatmap = c(3,4,2,2),
+plotDendrograms = FALSE, xLabelsAngle = 90)
+```
+
+## **Challenge 5** ##
+Create a dendrogram and heatmap using two clinical traits. For example, weight AND Glucose. 
+
+## **Answer 5** ##
+
+```{r}
+# Isolate weight from the clinical traits
+weight = as.data.frame(datTraits$weight_g);
+names(weight) = "weight"
+Glucose = as.data.frame(datTraits$Glucose)
+names(Glucose) = "Glucose"
+# Add the weight to existing module eigengenes
+MET = orderMEs(cbind(MEs, weight,Glucose))
+# Plot the relationships among the eigengenes and the trait
+sizeGrWindow(5,7.5);
+par(cex = 0.9)
+plotEigengeneNetworks(MET, "", marDendro = c(0,4,1,2), marHeatmap = c(3,4,1,2), cex.lab = 0.8, xLabelsAngle
+= 90)
+```
+Great! As you are able to focus more on how these two traits fit into the eigengene network, rather than be distracted by the other clinical trait data. 
 
 ## References:
 
