@@ -30,7 +30,7 @@ All of these are important for identifying potential candidate genes associated 
 Before running through the following code you will need to install the
 following packages: \{BiocManager\}, \{WGCNA\}, \{flashClust\}
 
-BiocManager is a package that will facilitate the installation of the other two packages as they are not updated to the current version of R. While running this module it is best to update your R and Rstudio to the most current version. 
+BiocManager is a package that will facilitate the installation of the other two packages as they are not updated to the current version of R. We have also found while running this module it is best to update your R and Rstudio to the most current version. 
 
 ```{r}
 #install.packages('BiocManager')
@@ -52,9 +52,9 @@ library(curl)
 
 WGCNA utilizes gene expression data from micro array or RNA-seq experiments. For a basic understanding of these experiments you can view [this educational video](https://www.youtube.com/watch?v=Hv5flUOsE0s). 
 
-The data set used in this analysis is available from the authors of the WGCNA pathway (Steve Hovarth and Peter Langfelder) in their [tutorial](https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/). 
+We are utilizing the data set available from the authors of the WGCNA pathway (Steve Hovarth and Peter Langfelder) that they utilize in their [tutorial](https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/). 
 
-For this tutorial you can read in the data set from our github page. 
+For this tutorial we will be reading in the data set from our github page. 
 
 ```{r}
 d <- curl('https://raw.githubusercontent.com/vfrench-397/AN588_RVignette/main/FemaleLiver-Data/LiverFemale3600.csv')
@@ -64,13 +64,13 @@ head(liver.data)
 
 This .csv file contains quantified and normalized gene expression data from livers of several F2 female mice. 
 
-For the purposes of this vignette it is just important to understand the values in our data set are gene expression levels relative to a control.  
+For the purposes of this tutorial it is just important to understand the values in our data set are gene expression levels relative to a control.  
 
 
 > **NOTE**: For information on how to generate expression data from raw sequence reads, there is a great [online course](https://www.singlecellcourse.org/scrna-seq-analysis-with-bioconductor.html) available from the Sanger Institute detailing the process. 
 
 
-The data set contains a lot of additional trait data not relevant to your analysis and is in an incompatible format for the WGCNA pathway. Therefore you need to reformat the data so it is conducive to the WGCNA package functions. 
+The data set also contains a lot of additional trait data not relevant to our analysis and is in an incompatible format for the WGCNA pathway. Therefore we need to reformat the data so it is conducive to the WGCNA package functions. 
 
 ## Data Cleaning and Removing Outliers 
 
@@ -98,8 +98,8 @@ summary(gsg)
 ```
 
 By viewing the gsg list object you can see it contains 3 logical vectors
-(good genes, good samples and allOK). If you want to see if the function
-identified any possible outlier all you have to do is evaluate the allOK
+(good genes, good samples and allOK). If we want to see if the function
+identified any possible outlier all we have to do is evaluate the allOK
 vector.
 
 ```{r}
@@ -135,9 +135,9 @@ plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="",
 cex.axis = 1.5, cex.main = 2)
 ```
 
-Here you can see sample F2_221 seems to be distant from all of the other samples indicating it is likely an outlier sample. 
+Here you can see sample F2221 seems to be distant from all of the other samples indicating it is likely an outlier sample. 
 
-You can remove the outlier using a cutree function.
+We can remove the outlier using a cutree function.
 
 ```{r}
 #Setting the graphical parameters
@@ -149,7 +149,7 @@ cex.axis = 1.5, cex.main = 2)
 abline(h = 15, col = "red");
 ```
 
-In this case it looks like the cut height of 15 would cut F2_221 and retain the rest of the samples. 
+In our case it looks like the cut height of 15 would cut F2221 and retain the rest of the samples. 
 
 ```{r}
 cut.sampleTree <- cutreeStatic(sampleTree, cutHeight = 15, minSize = 10) #returns numeric vector
@@ -161,16 +161,16 @@ expression.data <- expression.data[cut.sampleTree==1, ]
 
 ### Pairwise Gene Co-expression similarity
 
-Once you have purged the outliers, you can begin your network construction. The first step in network construction is to identify some sort of similarity measurement between pairs of genes. A similarity measurement represents the concordance of gene expression profiles across samples. In WGCNA the similarity measurement for each pair of genes (gene i and gene j) is denoted by their [Pearson correlation coefficient](https://fuzzyatelin.github.io/bioanth-stats/module-12/module-12.html). 
+Once we have purged the outliers, we can begin our network construction. The first step in network construction is to identify some sort of similarity measurement between pairs of genes. A similarity measurement represents the concordance of gene expression profiles across samples. In WGCNA the similarity measurement for each pair of genes (gene i and gene j) is denoted by their [Pearson correlation coefficient](https://fuzzyatelin.github.io/bioanth-stats/module-12/module-12.html). 
 
 #### Unsigned Networks 
 
-For unsigned networks you take the absolute value of the correlation. So
+For unsigned networks we take the absolute value of the correlation. So
 the similarity measurement is denoted by:
 
 $sab=|cor(a, b)|$
 
-Although, it is more common practice to create a signed network. As unsigned networks make biological interpretation of results extremely difficult. If the network is unsigned, you do not know if the gene is up or down regulated in the sample trait, just that its expression is significantly different. 
+Although, it is more common practice to create a signed network. As unsigned networks make biological interpretation of results extremely difficult. If the network is unsigned, we do not know if the gene is up or down regulated in the sample trait, just that its expression is significantly different. 
 
 #### Signed Networks 
 
@@ -194,7 +194,7 @@ of network construction you are trying to perform.
 
 $aij = signum(sij,\tau) = \{ \text{1 if sij} \geq \tau , \text{0 if sij} < \tau \}$
                           
-Here you can see the similarity measurement is compared to a hard threshold parameter of \tau. If the similarity measurement is greater than \tau the pair of genes are assigned a value of 1 (connected) in the adjacency matrix.  If the similarity measurement is less than \tau, the pair is assigned a 0 (not connected) in the adjacency matrix. 
+Here you can see the similarity measurement is compared to a hard threshold parameter of \tau. If the similarity measurement is greater than τ the pair of genes are assigned a value of 1 (connected) in the adjacency matrix.  If the similarity measurement is less than \tau, the pair is assigned a 0 (not connected) in the adjacency matrix. 
 
 
 > **NOTE**: Utilizing a hard threshold can mean you lose a lot of information. If you set the threshold to .9, even if a pair has a similarity of .89999999999 they will be considered to have no connection. 
@@ -214,7 +214,7 @@ Here you can see the adjacency matrix value is calculated by raising the
 similarity measurement to the defined threshold parameter \beta.
 
 
-> **NOTE**: The WGCNA package has a built in function called ```adjacency()``` that will generate the pairwise similarity measurements and the adjacency matrix but before you call the function you need to identify what value you want to use for the threshold parameter.
+> **NOTE**: The WGCNA package has a built in function called ```adjacency()``` that will generate the pairwise similarity measurements and the adjacency matrix but before we call the function we need to identify what value we want to use for our threshold parameter.
 
 
 #### Determining the Soft Power Threshold 
@@ -229,14 +229,14 @@ $p(k) \sim k^{-\gamma}$
 
 > **Note**: [Here](https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html) is a great publication for more information about scale free topology model assumptions.
 
-Again the WGCNA package has a built in function that helps to determine what the appropriate β parameter will be to calculate our adjacency matrix. The ```pickSoftThreshold()``` function calculates multiple networks all based on different \beta values and returns a data frame with the $R^2$ values for the networks scale-free topology model fit as well as the mean connectivity measures.
+Again the WGCNA package has a built in function that helps us determine what the appropriate β parameter will be to calculate our adjacency matrix. The ```pickSoftThreshold()``` function calculates multiple networks all based on different β values and returns a data frame with the R^2 values for the networks scale-free topology model fit as well as the mean connectivity measures.
 
 ```{r}
 spt <- pickSoftThreshold(expression.data) 
 spt
 ```
 
-You can then plot this data frame to better visualize what \beta value you should choose. 
+We can then plot this data frame to better visualize what \beta value we should choose. 
 
 > **REMINDER**: We should be maximizing the $R^2$ value and minimizing mean connectivity.
 
@@ -259,13 +259,13 @@ main = paste("Mean connectivity"))
 text(spt$fitIndices[,1], spt$fitIndices[,5], labels= spt$fitIndices[,1],col="red")
 ```
 
-You can determine the soft power threshold should be set to 6 as it is the spt that retains the highest mean connectivity while reaching an $R^2$ value above 0.80. 
+We can determine our soft power threshold should be set to 6 as it is the spt that retains the highest mean connectivity while reaching an $R^2$ value above 0.80. 
 
 > **NOTE**: the higher the \beta value, the stronger the connection strength will be of highly correlated gene expression profiles and the more devalued low correlations will be.
 
 ### **CHALLENGE 1**
 
-Using the following data set, find the appropriate soft threshold parameter.
+Using the following data set find its appropriate soft threshold parameter.
 
 ```{r}
 f <- curl('https://raw.githubusercontent.com/vfrench-397/AN588_RVignette/main/FemaleLiver-Data/LiverMale3600.csv')
@@ -299,7 +299,7 @@ text(spt$fitIndices[,1], spt$fitIndices[,5], labels= spt$fitIndices[,1],col="red
 
 ### Calling the Adjacency Function
 
-Now that you have the soft threshold power determined you can call on the ```adjacency()``` function of the WGCNA package. 
+Now that we have our soft threshold power determined we can call on the ```adjacency()``` function of the WGCNA package. 
 
 > **REMINDER**: This function calculates the similarity measurement and transforms the similarity by the adjacency function and generates a weighted network adjacency matrix.
 
@@ -312,11 +312,11 @@ adjacency <- adjacency(expression.data, power = softPower)
 
 ### Defining Dissimilarity
 
-Once the network is constructed, you can begin to extract some meaningful relationships. You can use hierarchical clustering yet again to cluster the network into **modules**.  
+Once our network is constructed, we can begin to extract some meaningful relationships. We can use hierarchical clustering yet again to cluster the network into **modules**.  
 
-> **NOTE**: A module is a group of gene profiles that are highly correlated, or have a high topological overlap. 
+Lets quickly define module before we go on: A module is a group of gene profiles that are highly correlated, or have a high topological overlap. 
 
-In order to utilize the clustering functions in R you must transform the adjacency matrix into measures of gene dissimilarity (distance of a gene from every other gene in the system). 
+In order to utilize the clustering functions in R we must transform our adjacency matrix into measures of gene dissimilarity (distance of a gene from every other gene in the system). 
 
 > **NOTE**: This is due to the fact that dissimilarity is used in traditional
 cluster analyses.
@@ -335,7 +335,7 @@ TOM <- TOMsimilarity(adjacency)
 
 ### **CHALLENGE 2**
 
-The current matrix gives us the similarity between genes. How do you convert this into measures of dissimilarity? 
+Our current matrix gives us the similarity between genes. How should we convert this into measures of dissimilarity? 
 
 ### **ANSWER 2**
 
@@ -361,16 +361,16 @@ plot(geneTree, xlab="", sub="", main = "Gene clustering on TOM-based dissimilari
 labels = FALSE, hang = 0.04)
 ```
 
-To identify modules from this gene dendrogram, you can use the ```cutreeDynamic()``` function. This will allow you to set a minimum cluster size. For genomic data like this it is more beneficial to set minimum module sizes relatively high as you are working with high loads of data. The authors of WGCNA recommend to start at a ```minClusterSize = 30```. 
+To identify modules from this gene dendrogram, we will use the ```cutreeDynamic()``` function. This will allow us to set a minimum cluster size. For genomic data like this it is more beneficial to set minimum module sizes relatively high as we are working with high loads of data. The authors of WGCNA recommend to start at a ```minClusterSize = 30```. 
 
 ```{r}
 Modules <- cutreeDynamic(dendro = geneTree, distM = TOM.dissimilarity, deepSplit = 2, pamRespectsDendro = FALSE, minClusterSize = 30)
 table(Modules) #returns a table of the counts of factor levels in an object. In this case how many genes are assigned to each created module. 
 ```
 
-Here you can see 22 modules were created. The Label 0 Module is reserved for unassigned genes (genes that do not fit in any module). 
+Here we can see 22 modules were created. The Label 0 Module is reserved for unassigned genes (genes that do not fit in any module). 
 
-You can now plot the module assignment under the gene dendrogram for visualization. 
+We can now plot the module assignment under the gene dendrogram for visualization. 
 
 ```{r}
 ModuleColors <- labels2colors(Modules) #assigns each module number a color
@@ -389,7 +389,7 @@ main = "Gene dendrogram and module colors")
 
 A ME (Module Eigengene) is the standardized gene expression profile for a given module.
 
-To identify the Module Eigengene you can call on the expression data into the ```moduleEigengenes()``` function. 
+To identify the Module Eigengene we can call on the expression data into the moduleEigengenes function. 
 
 ```{r}
 MElist <- moduleEigengenes(expression.data, colors = ModuleColors) 
@@ -397,7 +397,7 @@ MEs <- MElist$eigengenes
 head(MEs)
 ```
 
-You have now identified the eigengenes for the data. 
+We have now identified the eigengenes for our data. 
 
 ## Module Merging
 
@@ -408,10 +408,10 @@ merge the modules that have similar expression profiles.
 
 > **REMINDER**: An eigengene is the gene whose expression is representative of the the majority of genes expressed within a module. 
 
-In order to do cluster analysis you must first find a measurement of dissimilarity (distance) between module eigengenes. 
+In order to do cluster analysis we must first find a measurement of dissimilarity (distance) between module eigengenes. 
 
-However, because there are missing values present in the input variable,
-you will need to add an argument ```use= "complete" ```. This command
+However, because we have missing values present in our input variable,
+we will need to add an argument ```use= "complete" ```. This command
 removes rows of the matrix which have NA values. Removing these NAs
 allows ME.dissimilarity to run. This may or may not be necessary
 depending on your data set.
@@ -420,10 +420,10 @@ depending on your data set.
 ME.dissimilarity = 1-cor(MElist$eigengenes, use="complete") #Calculate eigengene dissimilarity
 ```
 
-Now, using the new found measurements of dissimilarity, you can 
-construct a cluster tree. You will also be adding a line at the height of
+Now, using our new found measurements of dissimilarity, we will
+construct a cluster tree. We will also be adding a line at the height of
 .25. This height corresponds to a correlation of over 75%. Any branches
-below this line are more than 75% related, and you will thus be merging
+below this line are more than 75% related, and we will thus be merging
 them!
 
 ```{r}
@@ -434,7 +434,7 @@ plot(METree)
 abline(h=.25, col = "red") #a height of .25 corresponds to correlation of .75
 ```
 
-This figure shows all of the modules which are more than 75% similar. For example you can see that MEcyan and MEpurple are more than 75% similar. Now you can merge these two modules, and others like them using the ```mergeCloseModules()``` command 
+This figure shows all of the modules which are more than 75% similar. For example you can see that MEcyan and MEpurple are more than 75% similar. Now we will merge these two modules, and others like them using the ```mergeCloseModules()``` command 
 
 ```{r}
 merge <- mergeCloseModules(expression.data, ModuleColors, cutHeight = .25)
@@ -444,7 +444,7 @@ mergedColors = merge$colors
 mergedMEs = merge$newMEs
 ```
 
-The similar modules are now merged! Let's compare them with the original
+The similar modules are now merged! Lets compare them with our original
 modules by creating another dendrogram
 
 ### **CHALLENGE 3**
@@ -484,14 +484,14 @@ traitData <- read.csv(t, header = TRUE, stringsAsFactors = FALSE)
 head(traitData)
 ```
 
-You can clean the data by removing unnecessary columns and pulling out the continuous traits. 
+Cleaning Trait Data
 
 ```{r}
 allTraits <- traitData[, -c(31, 16)] #removing notes and comments sections 
 allTraits <- allTraits[, c(2, 11:36) ] #pulling out only continuous traits 
 ```
 
-Finally, you must match the trait data to the expression data by the sample number
+Forming a data frame analagous to expression data that can hold clinical traits
 
 ```{r}
 Samples <- rownames(expression.data)
@@ -502,34 +502,43 @@ rownames(datTraits) <- allTraits[traitRows, 1]
 
 ### Module-Trait associations
 
-You can create a a sample dendrogram and plot it above a sample-trait heatmap to visualize the relationship between traits and individual samples. #Vicky: I don't think this is necessary tbh
+Visualize how the clinical traits relate to the sample dendrogram.
 
 ```{r}
+# Re-cluster samples
 sampleTree2 = hclust(dist(datTraits), method = "average")
-traitColors = numbers2colors(datTraits, signed = FALSE) # Converts traits to a color representation: white means a low measured value of that trait, red means high, grey means missing entry
-# Plot the sample dendrogram and the heatmap underneath
+# Convert traits to a color representation: white means low, red means high, grey means missing entry
+traitColors = numbers2colors(datTraits, signed = FALSE);
+# Plot the sample dendrogram and the colors underneath.
 plotDendroAndColors(sampleTree2, traitColors,
 groupLabels = names(datTraits),
 main = "Sample dendrogram and trait heatmap")
 ```
+This is the clustering dendrogram of samples based on their Euclidan distance. The white means a low value, red demonstrates a high value, and the grey areas are missing entries.
 
-First, you will quantify the association between the expression profile and a particular trait of interest by calculating the correlation of the trait with previously identified module eigengenes. This pairwise correlation is known as the eigengene **gene significance**
+#### Quantifying Module Trait Associations
+
+Identify modules that are significantly associated with external traits by correlating the trait with eigengenes (summary or representative gene for each module). Correlate eigengenes with external traits, and look for significant association.
 
 ```{r}
 # Define numbers of genes and samples
 nGenes = ncol(expression.data)
 nSamples = nrow(expression.data)
-module.trait.correlation = cor(mergedMEs, datTraits, use = "p") #p for pearson correlation coefficient 
-module.trait.Pvalue = corPvalueStudent(module.trait.correlation, nSamples) #calculate the p-value associated with the correlation
+# Recalculate Module Eigengenes with color labels
+#MEs0 = moduleEigengenes(datExpr, mergedColors)$eigengenes
+#MEs = orderMEs(MEs0)
+module.trait.correlation = cor(mergedMEs, datTraits, use = "p")
+module.trait.Pvalue = corPvalueStudent(module.trait.correlation, nSamples)
 ```
 
-Once you have the gene signficance and the corresponding p-values you can create a module-trait heatmap to neatly visualize the module-trait relationships 
+There are many modules and traits. A graphical representation will be helpful in viewing the table. Each association value is color coded by correlation value.
+
 ```{r}
 # Will display correlations and their p-values
 textMatrix = paste(signif(module.trait.correlation, 2), "\n(",
 signif(module.trait.Pvalue, 1), ")", sep = "");
 dim(textMatrix) = dim(module.trait.correlation)
-par(mar = c(6, 8.5, 3, 1))
+par(mar = c(6, 8.5, 4, 4))
 # Display the correlation values within a heatmap plot
 labeledHeatmap(Matrix = module.trait.correlation,
 xLabels = names(datTraits),
@@ -539,41 +548,46 @@ colorLabels = FALSE,
 colors = blueWhiteRed(50),
 textMatrix = textMatrix,
 setStdMargins = FALSE,
-cex.text = 0.4,
+cex.text = 0.5,
 zlim = c(-1,1),
 main = paste("Module-trait relationships"))
 ```
-
-Those with strong positive correlations are shaded a darker red while those with stronger negative correlations become more blue. The associated p value is also logged in parentheses underneath the gene significance. 
+Each row corresponds to a module eigengene, and the columns correspond to a trait. Each cell corresponds to a p-value and correlation. Those with strong positive correlations are shaded a darker red while those with stronger negative correlations become more blue.
 
 ## Target Gene Identification
 
-You can use the gene significance along with the genes **intramodular connectivity** to identify potential target genes associated with a particular trait of interest. For this analysis weight will be the clinical trait. 
+As was discussed in the introduction, you can now identify novel target genes in molecular pathways by looking at the genes intramodular connectivity and its gene significance. 
 
-> Connectivity - how connected a speficic node is in the network (how many nodes have
+We quantify associations of individual genes with our trait of interest (weight) by defining Gene Significance GS as (the absolute value of) the correlation between the gene and the trait. For each module, we also define a quantitative measure of module membership MM as the correlation of the module eigengene and the gene expression profile. This allows us to quantify the similarity of all genes on the array to every module.
+
+Connectivity - how connected is that speficic node (how many nodes have
 high correlation with that node). High connectivity indicates a hub gene
-(central to many nodes).
-    Whole Network connectivity - a measure for how well the node is
-connected throughout the entire system
-    Intramodular connectivity - a measure for how well the node is connected within its assigned module. Also an indicator for how well that node belongs to
-its module. This is also known as module membership.
+(central to many nodes). - high connectivity can be identified by a high
+topological overlap
 
-The module membership/intramodular connectivity is calculated as the correlation of the eigengene and the gene expression profile. This quantifies the similarity of all genes on the array to every module.
+Whole Network connectivity - a measure for how well the node is
+connected throughout the entire system
+
+Intramodular connectivity - a measure for how well that node belongs to
+its module. How well that node is connected within its module.
+
+Gene significance - (the pairwise correlation between a sample trait and
+the eigengene, and the p-value for each module). Module eigengenes
+correlated with the sample trait to determine the eigengene significance
 
 ```{r}
 # Define variable weight containing the weight column of datTrait
 weight = as.data.frame(datTraits$weight_g)
 names(weight) = "weight"
+# names (colors) of the modules
+modNames = substring(names(mergedMEs), 3)
 
-modNames = substring(names(mergedMEs), 3) #extract module names
-
-#Calculate the module membership and the associated p-values
 geneModuleMembership = as.data.frame(cor(expression.data, mergedMEs, use = "p"))
 MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples))
 names(geneModuleMembership) = paste("MM", modNames, sep="")
 names(MMPvalue) = paste("p.MM", modNames, sep="")
 
-#Calculate the gene significance and associated p-values
+
 geneTraitSignificance = as.data.frame(cor(expression.data, weight, use = "p"))
 GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples))
 names(geneTraitSignificance) = paste("GS.", names(weight), sep="")
@@ -581,11 +595,10 @@ names(GSPvalue) = paste("p.GS.", names(weight), sep="")
 head(GSPvalue)
 ```
 
-Using the gene significance you can identify genes that have a high significance for weight. Using the module membership measures you can identify genes with high module membership in interesting modules. 
+Intramodular analysis: identifying genes with high GS and MM
 
-As an example, you can look at the magenta module as it has the highest significant association with weight (.59). 
+Using the GS and MM measures, we can identify genes that have a high significance for weight as well as high module membership in interesting modules. As an example, we look at the magenta module that has the highest significant association with weight (.59). We plot a scatter plot of Gene Significance vs. Module Membership in the magenta module:
 
-Plot a scatter plot of gene significance vs. module membership in the magenta module. 
 ```{r}
 module = "magenta"
 column = match(module, modNames)
@@ -598,25 +611,102 @@ main = paste("Module membership vs. gene significance\n"),
 cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 ```
 
-The magenta gene significance and module membership have a positive correlation of .49 with a very significant p-value. This indicates that the genes that are highly significantly associated with the trait (high gene significance) are also the genes that are the most connected within their module (high module membership). Therefore genes in the magenta module could be potential target genes when looking at body weight.  
+
+Clearly, GS and MM are highly correlated,illustrating that genes highly significantly associated with a trait are often also the most important (central) elements of modules associated with the trait. 
+
+We have found modules with high association with our trait of interest, and have identified their central players by the Module Membership measure
 
 ### **CHALLENGE 4**
 
-Plot the gene significance and the module membership values of another module into a scatter plot. Does the module you selected contain potential candidate genes? 
+Try this analysis the Glucose trait/module correlations from the heat map.
+
+HINT: Define the variable "Glucose" containing the Glucose column
 
 ### **ANSWER 4**
 
 ```{r}
-module = "purple"
+# Define the variable "Glucose" containing the Glucose column of datTrait
+Glucose = as.data.frame(datTraits$Glucose)
+names(Glucose) = "Glucose"
+# names (colors) of the modules
+modNames = substring(names(mergedMEs), 3)
+
+geneModuleMembership = as.data.frame(cor(expression.data, mergedMEs, use = "p"))
+MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples))
+names(geneModuleMembership) = paste("MM", modNames, sep="")
+names(MMPvalue) = paste("p.MM", modNames, sep="")
+
+
+geneTraitSignificance = as.data.frame(cor(expression.data, Glucose, use = "p"))
+GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples))
+names(geneTraitSignificance) = paste("GS.", names(Glucose), sep="")
+names(GSPvalue) = paste("p.GS.", names(Glucose), sep="")
+head(GSPvalue)
+```
+
+```{r}
+module = "blue"
 column = match(module, modNames)
 moduleGenes = mergedColors==module
 verboseScatterplot(abs(geneModuleMembership[moduleGenes,column]),
 abs(geneTraitSignificance[moduleGenes,1]),
 xlab = paste("Module Membership in", module, "module"),
-ylab = "Gene significance for body weight",
+ylab = "Gene significance for Glucose",
 main = paste("Module membership vs. gene significance\n"),
 cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 ```
+## Network Visualization of Eigengenes
+
+It is possible to study the relationship among found modules. Eigengenes can be used as representative profiles and quantify module similiarity by the correlation of eigengenes.
+
+You are able to generate a summary plot of the eigengene network using the function "plotEigengeneNetworks." Using this function, you are able to isolate a clinical trait (or multiple traits), to visualize how the trait fits into the eigengene network. Much like in the Target Gene Identification section, you can focus on a clinical trait, like weight, except rather than displaying the relationship in a plot, you can display the relationship on a heatmap.
+
+```{r}
+# Isolate weight from the clinical traits
+weight = as.data.frame(datTraits$weight_g);
+names(weight) = "weight"
+# Add the weight to existing module eigengenes
+MET = orderMEs(cbind(MEs, weight))
+# Plot the relationships among the eigengenes and the trait
+sizeGrWindow(5,7.5);
+par(cex = 0.9)
+plotEigengeneNetworks(MET, "", marDendro = c(0,4,1,2), marHeatmap = c(3,4,1,2), cex.lab = 0.8, xLabelsAngle
+= 90)
+```
+This function above produces a dendrogram of eigengenes and isolated trait, as well as the corresponding heat map. You can separate the two using the following code: 
+
+```{r}
+# Plot the dendrogram
+sizeGrWindow(6,6);
+par(cex = 1.0)
+plotEigengeneNetworks(MET, "Eigengene dendrogram", marDendro = c(0,4,2,0),
+plotHeatmaps = FALSE)
+# Plot the heatmap matrix (note: this plot will overwrite the dendrogram plot)
+par(cex = 1.0)
+plotEigengeneNetworks(MET, "Eigengene adjacency heatmap", marHeatmap = c(3,4,2,2),
+plotDendrograms = FALSE, xLabelsAngle = 90)
+```
+
+### **CHALLENGE 5** ##
+Create a dendrogram and heatmap using two clinical traits. For example, weight AND Glucose. 
+
+### **ANSWER 5** ##
+
+```{r}
+# Isolate weight and Glucose from the clinical traits
+weight = as.data.frame(datTraits$weight_g);
+names(weight) = "weight"
+Glucose = as.data.frame(datTraits$Glucose)
+names(Glucose) = "Glucose"
+# Add the weight to existing module eigengenes
+MET = orderMEs(cbind(MEs, weight,Glucose))
+# Plot the relationships among the eigengenes and the trait
+sizeGrWindow(5,7.5);
+par(cex = 0.9)
+plotEigengeneNetworks(MET, "", marDendro = c(0,4,1,2), marHeatmap = c(3,4,1,2), cex.lab = 0.8, xLabelsAngle
+= 90)
+```
+Great! As you are able to focus more on how these two traits fit into the eigengene network, rather than be distracted by the other clinical trait data. 
 
 ## References:
 
