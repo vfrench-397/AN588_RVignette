@@ -1,5 +1,5 @@
 ---
-title: "Weighted Gene Network Correlation Analysis"
+title: "WGCNA"
 author: 'Victoria French, CeCe Gerstenbacher, Warrenkevin Henderson, and Elizabeth
   Varghese'
 date: "11/29/2021"
@@ -227,7 +227,7 @@ The scale-free topology is used because it is based on the idea that the probabi
 
 $p(k) \sim k^{-\gamma}$
 
-> **Note**: [Here](https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html) is a great publication for more information about scale free topology model assumptions.
+> **NOTE**: [Here](https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html) is a great publication for more information about scale free topology model assumptions.
 
 Again the WGCNA package has a built in function that helps to determine what the appropriate β parameter will be to calculate our adjacency matrix. The ```pickSoftThreshold()``` function calculates multiple networks all based on different \beta values and returns a data frame with the $R^2$ values for the networks scale-free topology model fit as well as the mean connectivity measures.
 
@@ -325,7 +325,7 @@ cluster analyses.
 
 The TOM-based dissimilarity is preferentially used over dissimilarity based on correlation coefficients because TOM-based dissimilarity generates more distinct modules.
 
-> **Note**: [Here](https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html) is a great publication for information about why topological overlap is used. 
+> **NOTE**: [Here](https://www-degruyter-com.ezproxy.bu.edu/document/doi/10.2202/1544-6115.1128/html) is a great publication for information about why topological overlap is used. 
 
 To convert the adjacency matrix into a TOM similarity matrix we can call the WGCNA function ```TOMsimilarity()```. 
 
@@ -502,17 +502,6 @@ rownames(datTraits) <- allTraits[traitRows, 1]
 
 ### Module-Trait associations
 
-You can create a a sample dendrogram and plot it above a sample-trait heatmap to visualize the relationship between traits and individual samples. #Vicky: I don't think this is necessary tbh
-
-```{r}
-sampleTree2 = hclust(dist(datTraits), method = "average")
-traitColors = numbers2colors(datTraits, signed = FALSE) # Converts traits to a color representation: white means a low measured value of that trait, red means high, grey means missing entry
-# Plot the sample dendrogram and the heatmap underneath
-plotDendroAndColors(sampleTree2, traitColors,
-groupLabels = names(datTraits),
-main = "Sample dendrogram and trait heatmap")
-```
-
 First, you will quantify the association between the expression profile and a particular trait of interest by calculating the correlation of the trait with previously identified module eigengenes. This pairwise correlation is known as the eigengene **gene significance**
 
 ```{r}
@@ -523,7 +512,8 @@ module.trait.correlation = cor(mergedMEs, datTraits, use = "p") #p for pearson c
 module.trait.Pvalue = corPvalueStudent(module.trait.correlation, nSamples) #calculate the p-value associated with the correlation
 ```
 
-Once you have the gene signficance and the corresponding p-values you can create a module-trait heatmap to neatly visualize the module-trait relationships 
+Once you have the gene signficance and the corresponding p-value for all the modules and traits, you can create a graphical representation (module-trait heatmap) that will be helpful to neatly visualize the module-trait relationships. 
+
 ```{r}
 # Will display correlations and their p-values
 textMatrix = paste(signif(module.trait.correlation, 2), "\n(",
@@ -544,7 +534,7 @@ zlim = c(-1,1),
 main = paste("Module-trait relationships"))
 ```
 
-Those with strong positive correlations are shaded a darker red while those with stronger negative correlations become more blue. The associated p value is also logged in parentheses underneath the gene significance. 
+Each row corresponds to a module eigengene, and the columns correspond to a trait. Each cell contains a p-value and correlation. Those with strong positive correlations are shaded a darker red while those with stronger negative correlations become more blue.
 
 ## Target Gene Identification
 
@@ -617,6 +607,66 @@ ylab = "Gene significance for body weight",
 main = paste("Module membership vs. gene significance\n"),
 cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 ```
+
+## Network Visualization of Eigengenes
+
+It is also possible to study the relationship among found modules. One way to do this is to quantify module similarity (adjacency) by calculating the pairwise correlation of representative eigengenes.
+
+You are able to generate a summary plot of the eigengene correlations using the function ```plotEigengeneNetworks()```. To visualize how the trait fits into the eigengene network you can bind the trait data to the module eigengenes and argue the data frame to ```plotEigengeneNetworks()```  which will display the relationship on a heatmap.
+
+```{r}
+# Isolate weight from the clinical traits
+weight = as.data.frame(datTraits$weight_g);
+names(weight) = "weight"
+# Add the weight to existing module eigengenes
+MET = orderMEs(cbind(MEs, weight))
+# Plot the relationships among the eigengenes and the trait
+par(cex = 0.9)
+plotEigengeneNetworks(MET, "", marDendro = c(0,4,1,2), marHeatmap = c(5,4,1,2), cex.lab = 0.8, xLabelsAngle
+= 90)
+```
+
+With this heatmap you can identify groups of correlated eigengenes called _meta modules_. Modules with mutual correlations stronger than their correlation with the specified clinical trait would be grouped into a meta module.  
+
+The ```plotEigengeneNetworks()``` function produces a dendrogram of eigengenes and the specified trait, as well as the corresponding eigengene heat map. You can separate the two using the following code: 
+
+```{r}
+# Plot the dendrogram
+par(cex = 1.0)
+plotEigengeneNetworks(MET, "Eigengene dendrogram", marDendro = c(0,4,2,0),
+plotHeatmaps = FALSE)
+```
+
+
+```{r}
+# Plot the heatmap matrix (note: this plot will overwrite the dendrogram plot)
+par(cex = 1.0)
+plotEigengeneNetworks(MET, "Eigengene adjacency heatmap", marHeatmap = c(5,5,2,2),
+plotDendrograms = FALSE, xLabelsAngle = 90)
+```
+
+### **CHALLENGE 5** 
+
+Create a dendrogram and heatmap using two clinical traits. For example, weight AND Glucose. 
+
+### **ANSWER 5** 
+
+```{r}
+# Isolate weight and Glucose from the clinical traits
+weight = as.data.frame(datTraits$weight_g);
+names(weight) = "weight"
+Glucose = as.data.frame(datTraits$Glucose)
+names(Glucose) = "Glucose"
+# Add the weight to existing module eigengenes
+MET = orderMEs(cbind(MEs, weight,Glucose))
+# Plot the relationships among the eigengenes and the trait
+par(cex = 0.9)
+plotEigengeneNetworks(MET, "", marDendro = c(0,4,1,2), marHeatmap = c(5,4,1,2), cex.lab = 0.8, xLabelsAngle
+= 90)
+```
+
+Great! As you are able to focus more on how these two traits fit into the eigengene network, rather than be distracted by the other clinical trait data. 
+
 
 ## References:
 
